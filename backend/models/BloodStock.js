@@ -1,100 +1,52 @@
 const mongoose = require('mongoose');
 
-const donationCampSchema = new mongoose.Schema({
-  name: {
+const bloodStockSchema = new mongoose.Schema({
+  bloodGroup: {
     type: String,
-    required: true
+    required: true,
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+    unique: true
   },
-  description: String,
-  organizer: {
-    type: String,
-    required: true
-  },
-  venue: {
-    name: {
-      type: String,
-      required: true
-    },
-    address: {
-      type: String,
-      required: true
-    },
-    city: String,
-    state: String,
-    location: {
-      type: {
-        type: String,
-        enum: ['Point'],
-        default: 'Point'
-      },
-      coordinates: {
-        type: [Number],
-        default: [0, 0]
-      }
-    }
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  startTime: {
-    type: String,
-    required: true
-  },
-  endTime: {
-    type: String,
-    required: true
-  },
-  contactPerson: {
-    name: String,
-    phone: String,
-    email: String
-  },
-  expectedDonors: {
+  unitsAvailable: {
     type: Number,
-    default: 0
+    required: true,
+    default: 0,
+    min: 0
   },
-  registeredDonors: [{
-    donor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+  lastUpdated: {
+    type: Date,
+    default: Date.now
+  },
+  expiringUnits: [{
+    units: Number,
+    expiryDate: Date
+  }],
+  minimumThreshold: {
+    type: Number,
+    default: 10
+  },
+  transactions: [{
+    type: {
+      type: String,
+      enum: ['Addition', 'Withdrawal', 'Expired'],
+      required: true
     },
-    registeredAt: {
+    units: {
+      type: Number,
+      required: true
+    },
+    date: {
       type: Date,
       default: Date.now
     },
-    attended: {
-      type: Boolean,
-      default: false
-    },
-    donated: {
-      type: Boolean,
-      default: false
+    reference: String,
+    performedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
-  }],
-  bloodGroups: [{
-    type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-  }],
-  image: String,
-  status: {
-    type: String,
-    enum: ['Upcoming', 'Ongoing', 'Completed', 'Cancelled'],
-    default: 'Upcoming'
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  }]
 }, {
   timestamps: true
 });
 
-// Create geospatial index
-donationCampSchema.index({ 'venue.location': '2dsphere' });
-
-module.exports = mongoose.model('DonationCamp', donationCampSchema);
+module.exports = mongoose.model('BloodStock', bloodStockSchema);
