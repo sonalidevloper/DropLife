@@ -1,0 +1,67 @@
+.dashboard-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.dashboard-header {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.dashboard-card {
+  border: none;
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.availability-toggle {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.donor-stats .stat-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.donor-stats .stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-card {
+  border: none;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
