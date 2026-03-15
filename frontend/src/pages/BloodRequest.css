@@ -1,0 +1,27 @@
+.blood-request-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 0;
+}
+
+.request-card {
+  border: none;
+  border-radius: 20px;
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.request-card .form-control,
+.request-card .form-select {
+  border-radius: 10px;
+}
