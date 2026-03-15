@@ -1,0 +1,101 @@
+.welcome-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-container {
+  z-index: 10;
+}
+
+.welcome-content {
+  text-align: center;
+  color: white;
+}
+
+.welcome-title {
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-subtitle {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+}
+
+.tagline {
+  font-size: 1.2rem;
+  font-style: italic;
+  margin-top: 1rem;
+  opacity: 0.9;
+}
+
+.fade-in {
+  animation: fadeIn 2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.blood-drop-animation {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 200px;
+}
+
+.blood-drop {
+  position: absolute;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  background: #dc3545;
+  border-radius: 50%;
+  animation: drop 2s infinite;
+  left: 50%;
+}
+
+.blood-drop.delay-1 {
+  animation-delay: 0.5s;
+  left: 40%;
+}
+
+.blood-drop.delay-2 {
+  animation-delay: 1s;
+  left: 60%;
+}
+
+@keyframes drop {
+  0% {
+    bottom: 100%;
+    opacity: 1;
+  }
+  100% {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 2.5rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1.2rem;
+  }
+}
