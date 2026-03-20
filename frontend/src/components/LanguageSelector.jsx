@@ -27,7 +27,21 @@ const LANGUAGES = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
   { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
   { code: 'sw', name: 'Kiswahili', flag: '🇰🇪' },
+  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'th', name: 'ภาษาไทย', flag: '🇹🇭' },
+  { code: 'fa', name: 'فارسی', flag: '🇮🇷' },
+  { code: 'he', name: 'עברית', flag: '🇮🇱' },
+  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+  { code: 'fi', name: 'Suomi', flag: '🇫🇮' },
+  { code: 'no', name: 'Norsk', flag: '🇳🇴' },
+  { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
+  { code: 'da', name: 'Dansk', flag: '🇩🇰' },
+  { code: 'am', name: 'አማርኛ', flag: '🇪🇹' },
+  { code: 'as', name: 'অসমীয়া', flag: '🇮🇳' },
+  { code: 'or', name: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
 ];
 
 const LanguageSelector = () => {

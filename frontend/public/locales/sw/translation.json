@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Nyumbani", "bloodRequest": "Ombi la Damu", "bloodAvailability": "Upatikanaji wa Damu", "camps": "Kambi za Uchangiaji", "about": "Kuhusu Sisi", "contact": "Wasiliana", "map": "Tafuta Wachangiaji", "analytics": "Uchambuzi", "notifications": "Arifa", "login": "Ingia", "register": "Jisajili", "logout": "Toka", "dashboard": "Dashibodi", "hospitals": "Hospitali" },
+  "home": { "title": "Okoa Maisha, Changia Damu", "subtitle": "Unganisha wachangiaji na wagonjwa wanaohitaji" },
+  "auth": { "login": "Ingia", "email": "Barua pepe", "password": "Nywila", "name": "Jina Kamili", "signIn": "Ingia", "signUp": "Jisajili" },
+  "common": { "save": "Hifadhi", "cancel": "Ghairi", "loading": "Inapakia...", "search": "Tafuta", "submit": "Wasilisha", "close": "Funga", "error": "Hitilafu", "success": "Mafanikio" }
+}

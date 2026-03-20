@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "હોમ", "bloodRequest": "રક્ત વિનંતી", "bloodAvailability": "રક્ત ઉપલબ્ધતા", "camps": "રક્તદાન શિબિર", "about": "અમારા વિષે", "contact": "સંપર્ક", "map": "દાતા શોધો", "analytics": "વિશ્લેષણ", "notifications": "સૂચનાઓ", "login": "લૉગિન", "register": "નોંધણી", "logout": "લૉગ આઉટ", "dashboard": "ડૅશબોર્ડ", "hospitals": "હૉસ્પિટલ" },
+  "home": { "title": "જીવ બચાવો, રક્ત દાન કરો", "subtitle": "દાતાઓને જરૂરિયાતવાળા દર્દીઓ સાથે જોડો" },
+  "auth": { "login": "લૉગિન", "email": "ઇ-મેઇલ", "password": "પાસવર્ડ", "name": "પૂરું નામ", "signIn": "સાઇન ઇન", "signUp": "સાઇન અપ" },
+  "common": { "save": "સાચવો", "cancel": "રદ કરો", "loading": "લોડ થઈ રહ્યું છે...", "search": "શોધો", "submit": "સબમિટ કરો", "close": "બંધ કરો", "error": "ભૂલ", "success": "સફળ" }
+}

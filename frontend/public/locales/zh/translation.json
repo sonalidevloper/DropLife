@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "首页", "bloodRequest": "血液请求", "bloodAvailability": "血液供应", "camps": "献血活动", "about": "关于我们", "contact": "联系我们", "map": "查找献血者", "analytics": "数据分析", "notifications": "通知", "login": "登录", "register": "注册", "logout": "退出登录", "dashboard": "仪表板", "hospitals": "医院" },
+  "home": { "title": "拯救生命，献血", "subtitle": "连接献血者与需要帮助的患者" },
+  "auth": { "login": "登录", "register": "注册", "email": "电子邮件", "password": "密码", "name": "全名", "signIn": "登录", "signUp": "注册" },
+  "common": { "save": "保存", "cancel": "取消", "loading": "加载中...", "search": "搜索", "submit": "提交", "close": "关闭", "error": "错误", "success": "成功", "delete": "删除", "edit": "编辑" }
+}

@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "ಮುಖಪುಟ", "bloodRequest": "ರಕ್ತ ವಿನಂತಿ", "bloodAvailability": "ರಕ್ತ ಲಭ್ಯತೆ", "camps": "ರಕ್ತದಾನ ಶಿಬಿರ", "about": "ನಮ್ಮ ಬಗ್ಗೆ", "contact": "ಸಂಪರ್ಕ", "map": "ದಾನಿಗಳನ್ನು ಹುಡುಕಿ", "analytics": "ವಿಶ್ಲೇಷಣೆ", "notifications": "ಅಧಿಸೂಚನೆಗಳು", "login": "ಲಾಗಿನ್", "register": "ನೋಂದಣಿ", "logout": "ಲಾಗ್ ಔಟ್", "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", "hospitals": "ಆಸ್ಪತ್ರೆಗಳು" },
+  "home": { "title": "ಜೀವ ಉಳಿಸಿ, ರಕ್ತ ದಾನ ಮಾಡಿ", "subtitle": "ದಾನಿಗಳನ್ನು ರೋಗಿಗಳೊಂದಿಗೆ ಸಂಪರ್ಕಿಸಿ" },
+  "auth": { "login": "ಲಾಗಿನ್", "email": "ಇಮೇಲ್", "password": "ಪಾಸ್‌ವರ್ಡ್", "name": "ಪೂರ್ಣ ಹೆಸರು", "signIn": "ಸೈನ್ ಇನ್", "signUp": "ಸೈನ್ ಅಪ್" },
+  "common": { "save": "ಉಳಿಸಿ", "cancel": "ರದ್ದು ಮಾಡಿ", "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...", "search": "ಹುಡುಕಿ", "submit": "ಸಲ್ಲಿಸಿ", "close": "ಮುಚ್ಚಿ", "error": "ದೋಷ", "success": "ಯಶಸ್ಸು" }
+}

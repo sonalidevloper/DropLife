@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Accueil", "bloodRequest": "Demande de Sang", "bloodAvailability": "Disponibilité du Sang", "camps": "Camps de Don", "about": "À Propos", "contact": "Contact", "map": "Trouver des Donneurs", "analytics": "Analytiques", "notifications": "Notifications", "login": "Connexion", "register": "S'inscrire", "logout": "Déconnexion", "dashboard": "Tableau de Bord", "hospitals": "Hôpitaux" },
+  "home": { "title": "Sauvez des Vies, Donnez du Sang", "subtitle": "Connectez les donneurs avec les patients dans le besoin", "findDonor": "Trouver un Donneur", "becomeDonor": "Devenir Donneur" },
+  "auth": { "login": "Connexion", "register": "S'inscrire", "email": "Email", "password": "Mot de Passe", "forgotPassword": "Mot de passe oublié?", "name": "Nom Complet", "signIn": "Se Connecter", "signUp": "S'inscrire" },
+  "common": { "save": "Enregistrer", "cancel": "Annuler", "loading": "Chargement...", "search": "Rechercher", "submit": "Soumettre", "close": "Fermer", "error": "Erreur", "success": "Succès", "delete": "Supprimer", "edit": "Modifier" }
+}

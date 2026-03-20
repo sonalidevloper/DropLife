@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "मुख्यपृष्ठ", "bloodRequest": "रक्त विनंती", "bloodAvailability": "रक्त उपलब्धता", "camps": "रक्तदान शिबिर", "about": "आमच्याबद्दल", "contact": "संपर्क", "map": "दाते शोधा", "analytics": "विश्लेषण", "notifications": "सूचना", "login": "लॉगिन", "register": "नोंदणी", "logout": "लॉगआउट", "dashboard": "डॅशबोर्ड", "hospitals": "रुग्णालये" },
+  "home": { "title": "जीव वाचवा, रक्तदान करा", "subtitle": "दाते आणि रुग्णांना जोडा" },
+  "auth": { "login": "लॉगिन", "email": "ईमेल", "password": "पासवर्ड", "name": "पूर्ण नाव", "signIn": "साइन इन", "signUp": "साइन अप" },
+  "common": { "save": "जतन करा", "cancel": "रद्द करा", "loading": "लोड होत आहे...", "search": "शोधा", "submit": "सादर करा", "close": "बंद करा", "error": "त्रुटी", "success": "यश" }
+}

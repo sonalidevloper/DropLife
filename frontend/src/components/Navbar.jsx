@@ -70,6 +70,9 @@ const Navbar = () => {
                       <NavDropdown.Item as={Link} to="/admin/hospitals">
                         {t('admin.hospitals', 'Hospitals')}
                       </NavDropdown.Item>
+                      <NavDropdown.Item as={Link} to="/admin/camps">
+                        Donation Camps
+                      </NavDropdown.Item>
                     </>
                   )}
 
@@ -97,15 +100,31 @@ const Navbar = () => {
                   )}
 
                   {user.role === 'donor' && (
-                    <NavDropdown.Item as={Link} to="/donor/dashboard">
-                      {t('donor.dashboard', 'Donor Dashboard')}
-                    </NavDropdown.Item>
+                    <>
+                      <NavDropdown.Item as={Link} to="/donor/dashboard">
+                        {t('donor.dashboard', 'Donor Dashboard')}
+                      </NavDropdown.Item>
+                      <NavDropdown.Item as={Link} to="/donor/profile">
+                        {t('donor.profile', 'My Profile')}
+                      </NavDropdown.Item>
+                      <NavDropdown.Item as={Link} to="/donor/history">
+                        {t('donor.history', 'Donation History')}
+                      </NavDropdown.Item>
+                    </>
                   )}
 
                   {user.role === 'user' && (
-                    <NavDropdown.Item as={Link} to="/user/dashboard">
-                      {t('nav.dashboard', 'Dashboard')}
-                    </NavDropdown.Item>
+                    <>
+                      <NavDropdown.Item as={Link} to="/user/dashboard">
+                        {t('nav.dashboard', 'Dashboard')}
+                      </NavDropdown.Item>
+                      <NavDropdown.Item as={Link} to="/user/profile">
+                        My Profile
+                      </NavDropdown.Item>
+                      <NavDropdown.Item as={Link} to="/user/requests">
+                        My Requests
+                      </NavDropdown.Item>
+                    </>
                   )}
 
                   <NavDropdown.Item as={Link} to="/notifications">

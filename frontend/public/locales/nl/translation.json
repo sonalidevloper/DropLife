@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Thuis", "bloodRequest": "Bloedaanvraag", "bloodAvailability": "Bloedaanbodbeschikbaarheid", "camps": "Donatiecampagnes", "about": "Over Ons", "contact": "Contact", "map": "Donoren Vinden", "analytics": "Analyses", "notifications": "Meldingen", "login": "Inloggen", "register": "Registreren", "logout": "Uitloggen", "dashboard": "Dashboard", "hospitals": "Ziekenhuizen" },
+  "home": { "title": "Levens Redden, Bloed Doneren", "subtitle": "Verbind donoren met patiënten in nood" },
+  "auth": { "login": "Inloggen", "email": "E-mail", "password": "Wachtwoord", "name": "Volledige Naam", "signIn": "Inloggen", "signUp": "Registreren" },
+  "common": { "save": "Opslaan", "cancel": "Annuleren", "loading": "Laden...", "search": "Zoeken", "submit": "Indienen", "close": "Sluiten", "error": "Fout", "success": "Succes" }
+}

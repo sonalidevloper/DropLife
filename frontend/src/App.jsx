@@ -25,6 +25,7 @@ import Helpline from './pages/Helpline';
 import MapView from './pages/MapView';
 import Analytics from './pages/Analytics';
 import HospitalsPublic from './pages/HospitalsPublic';
+import HospitalDetail from './pages/HospitalDetail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import HospitalLogin from './pages/HospitalLogin';
@@ -37,7 +38,12 @@ import HospitalPatients from './pages/HospitalPatients';
 import HospitalStaff from './pages/HospitalStaff';
 import NotificationsPage from './pages/NotificationsPage';
 import UserDashboard from './pages/UserDashboard';
+import UserProfile from './pages/UserProfile';
+import UserRequests from './pages/UserRequests';
 import DeliveryRecords from './pages/DeliveryRecords';
+import DonorProfile from './pages/DonorProfile';
+import DonationHistory from './pages/DonationHistory';
+import AdminCamps from './pages/AdminCamps';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -67,6 +73,7 @@ function App() {
           <Route path="/map" element={<MapView />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/hospitals" element={<HospitalsPublic />} />
+          <Route path="/hospitals/:id" element={<HospitalDetail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/hospital/login" element={<HospitalLogin />} />
@@ -90,6 +97,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/user/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/requests"
+            element={
+              <ProtectedRoute>
+                <UserRequests />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Donor Protected Routes */}
           <Route
@@ -97,6 +120,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DonorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/donor/profile"
+            element={
+              <ProtectedRoute>
+                <DonorProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/donor/history"
+            element={
+              <ProtectedRoute>
+                <DonationHistory />
               </ProtectedRoute>
             }
           />
@@ -197,6 +236,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly={true}>
                 <HospitalsPublic />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/camps"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminCamps />
               </ProtectedRoute>
             }
           />

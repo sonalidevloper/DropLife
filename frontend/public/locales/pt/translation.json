@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Início", "bloodRequest": "Pedido de Sangue", "bloodAvailability": "Disponibilidade de Sangue", "camps": "Campanhas de Doação", "about": "Sobre Nós", "contact": "Contato", "map": "Encontrar Doadores", "analytics": "Análises", "notifications": "Notificações", "login": "Entrar", "register": "Registrar", "logout": "Sair", "dashboard": "Painel", "hospitals": "Hospitais" },
+  "home": { "title": "Salve Vidas, Doe Sangue", "subtitle": "Conecte doadores com pacientes necessitados" },
+  "auth": { "login": "Entrar", "register": "Registrar", "email": "Email", "password": "Senha", "name": "Nome Completo", "signIn": "Entrar", "signUp": "Registrar" },
+  "common": { "save": "Salvar", "cancel": "Cancelar", "loading": "Carregando...", "search": "Pesquisar", "submit": "Enviar", "close": "Fechar", "error": "Erro", "success": "Sucesso" }
+}

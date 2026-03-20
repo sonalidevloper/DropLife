@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Ana Sayfa", "bloodRequest": "Kan Talebi", "bloodAvailability": "Kan Mevcudiyeti", "camps": "Bağış Kampları", "about": "Hakkımızda", "contact": "İletişim", "map": "Bağışçı Bul", "analytics": "Analizler", "notifications": "Bildirimler", "login": "Giriş Yap", "register": "Kayıt Ol", "logout": "Çıkış Yap", "dashboard": "Panel", "hospitals": "Hastaneler" },
+  "home": { "title": "Hayat Kurtar, Kan Bağışla", "subtitle": "Bağışçıları ihtiyaç sahibi hastalarla buluşturun" },
+  "auth": { "login": "Giriş Yap", "register": "Kayıt Ol", "email": "E-posta", "password": "Şifre", "name": "Ad Soyad", "signIn": "Giriş", "signUp": "Kayıt" },
+  "common": { "save": "Kaydet", "cancel": "İptal", "loading": "Yükleniyor...", "search": "Ara", "submit": "Gönder", "close": "Kapat", "error": "Hata", "success": "Başarılı" }
+}

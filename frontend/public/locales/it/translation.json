@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Home", "bloodRequest": "Richiesta di Sangue", "bloodAvailability": "Disponibilità di Sangue", "camps": "Campagne di Donazione", "about": "Chi Siamo", "contact": "Contatto", "map": "Trova Donatori", "analytics": "Analisi", "notifications": "Notifiche", "login": "Accedi", "register": "Registrati", "logout": "Esci", "dashboard": "Pannello", "hospitals": "Ospedali" },
+  "home": { "title": "Salva Vite, Dona Sangue", "subtitle": "Connetti i donatori con i pazienti bisognosi" },
+  "auth": { "login": "Accedi", "email": "Email", "password": "Password", "name": "Nome Completo", "signIn": "Accedi", "signUp": "Registrati" },
+  "common": { "save": "Salva", "cancel": "Annulla", "loading": "Caricamento...", "search": "Cerca", "submit": "Invia", "close": "Chiudi", "error": "Errore", "success": "Successo" }
+}

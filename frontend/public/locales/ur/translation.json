@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "ہوم", "bloodRequest": "خون کی درخواست", "bloodAvailability": "خون کی دستیابی", "camps": "عطیہ کیمپ", "about": "ہمارے بارے میں", "contact": "رابطہ", "map": "عطیہ دہندہ تلاش کریں", "analytics": "تجزیات", "notifications": "اطلاعات", "login": "لاگ ان", "register": "رجسٹر", "logout": "لاگ آؤٹ", "dashboard": "ڈیش بورڈ", "hospitals": "ہسپتال" },
+  "home": { "title": "زندگیاں بچائیں، خون عطیہ کریں", "subtitle": "عطیہ دہندگان کو ضرورتمند مریضوں سے جوڑیں" },
+  "auth": { "login": "لاگ ان", "email": "ای میل", "password": "پاس ورڈ", "name": "پورا نام", "signIn": "سائن ان", "signUp": "سائن اپ" },
+  "common": { "save": "محفوظ کریں", "cancel": "منسوخ کریں", "loading": "لوڈ ہو رہا ہے...", "search": "تلاش کریں", "submit": "جمع کروائیں", "close": "بند کریں", "error": "خطا", "success": "کامیابی" }
+}

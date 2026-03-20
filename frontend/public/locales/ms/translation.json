@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Laman Utama", "bloodRequest": "Permintaan Darah", "bloodAvailability": "Ketersediaan Darah", "camps": "Kempen Derma", "about": "Tentang Kami", "contact": "Hubungi", "map": "Cari Penderma", "analytics": "Analitik", "notifications": "Pemberitahuan", "login": "Log Masuk", "register": "Daftar", "logout": "Log Keluar", "dashboard": "Papan Pemuka", "hospitals": "Hospital" },
+  "home": { "title": "Selamatkan Nyawa, Derma Darah", "subtitle": "Hubungkan penderma dengan pesakit yang memerlukan" },
+  "auth": { "login": "Log Masuk", "email": "E-mel", "password": "Kata Laluan", "name": "Nama Penuh", "signIn": "Log Masuk", "signUp": "Daftar" },
+  "common": { "save": "Simpan", "cancel": "Batal", "loading": "Memuatkan...", "search": "Cari", "submit": "Hantar", "close": "Tutup", "error": "Ralat", "success": "Berjaya" }
+}

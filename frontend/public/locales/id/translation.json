@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Beranda", "bloodRequest": "Permintaan Darah", "bloodAvailability": "Ketersediaan Darah", "camps": "Kamp Donor", "about": "Tentang Kami", "contact": "Hubungi", "map": "Cari Donor", "analytics": "Analitik", "notifications": "Notifikasi", "login": "Masuk", "register": "Daftar", "logout": "Keluar", "dashboard": "Dasbor", "hospitals": "Rumah Sakit" },
+  "home": { "title": "Selamatkan Nyawa, Donasikan Darah", "subtitle": "Hubungkan donor dengan pasien yang membutuhkan" },
+  "auth": { "login": "Masuk", "register": "Daftar", "email": "Email", "password": "Kata Sandi", "name": "Nama Lengkap", "signIn": "Masuk", "signUp": "Daftar" },
+  "common": { "save": "Simpan", "cancel": "Batal", "loading": "Memuat...", "search": "Cari", "submit": "Kirim", "close": "Tutup", "error": "Kesalahan", "success": "Berhasil" }
+}

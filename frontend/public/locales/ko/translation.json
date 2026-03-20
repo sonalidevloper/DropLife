@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "홈", "bloodRequest": "헌혈 요청", "bloodAvailability": "혈액 가용성", "camps": "헌혈 캠프", "about": "소개", "contact": "연락처", "map": "기증자 찾기", "analytics": "분석", "notifications": "알림", "login": "로그인", "register": "등록", "logout": "로그아웃", "dashboard": "대시보드", "hospitals": "병원" },
+  "home": { "title": "생명을 구하세요, 헌혈하세요", "subtitle": "기증자와 환자를 연결합니다" },
+  "auth": { "login": "로그인", "register": "등록", "email": "이메일", "password": "비밀번호", "name": "전체 이름", "signIn": "로그인", "signUp": "가입" },
+  "common": { "save": "저장", "cancel": "취소", "loading": "로딩 중...", "search": "검색", "submit": "제출", "close": "닫기", "error": "오류", "success": "성공" }
+}
