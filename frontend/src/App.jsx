@@ -20,6 +20,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
 import Helpline from './pages/Helpline';
+import NotFound from './pages/NotFound';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -43,6 +44,7 @@ function App() {
           <Route path="/blood-request" element={<BloodRequest />} />
           <Route path="/blood-availability" element={<BloodAvailability />} />
           <Route path="/camps" element={<DonationCamps />} />
+          <Route path="*" element={<NotFound />} />
           
           {/* Donor Protected Routes */}
           <Route

@@ -3,32 +3,41 @@
   <head>
     <meta charset="utf-8" />
     
-    <!-- Favicon - Temporary emoji solution -->
+    <!-- Favicon - Blood drop emoji -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#dc3545" />
+    
+    <!-- SEO Meta Tags -->
     <meta
       name="description"
-      content="DROPLIFE - Smart Blood Donation System connecting donors and recipients in real-time"
+      content="DROPLIFE - Smart Blood Donation System connecting donors and recipients in real-time. Save lives with instant blood donor matching."
     />
     <meta name="author" content="DROPLIFE Team" />
-    <meta name="keywords" content="blood donation, donors, blood bank, healthcare, emergency blood, DROPLIFE" />
+    <meta name="keywords" content="blood donation, blood donors, blood bank, healthcare, emergency blood, blood request, DROPLIFE, save lives" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://droplife.vercel.app/" />
     <meta property="og:title" content="DROPLIFE - Smart Blood Donation System" />
-    <meta property="og:description" content="Connecting Lives, One Drop at a Time" />
+    <meta property="og:description" content="Connecting Lives, One Drop at a Time. Real-time blood donor matching platform." />
+    <meta property="og:image" content="https://droplife.vercel.app/og-image.jpg" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://droplife.vercel.app/" />
     <meta property="twitter:title" content="DROPLIFE - Smart Blood Donation System" />
     <meta property="twitter:description" content="Connecting Lives, One Drop at a Time" />
+    <meta property="twitter:image" content="https://droplife.vercel.app/twitter-image.jpg" />
     
+    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>" />
+    
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS for Maps -->
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -38,8 +47,28 @@
     
     <title>DROPLIFE - Smart Blood Donation System</title>
     
+    <!-- Suppress browser extension console logs -->
+    <script>
+      (function() {
+        const originalLog = console.log;
+        console.log = function(...args) {
+          const message = args.join(' ');
+          // Filter out browser extension messages
+          if (
+            message.includes('enable copy') ||
+            message.includes('E.C.P') ||
+            message.includes('ecp_regular') ||
+            message.includes('chrome-extension')
+          ) {
+            return;
+          }
+          originalLog.apply(console, args);
+        };
+      })();
+    </script>
+    
     <style>
-      /* Loading screen */
+      /* Loading Screen Styles */
       #loading-screen {
         position: fixed;
         top: 0;
@@ -79,36 +108,86 @@
         margin-top: 20px;
         font-size: 18px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: 500;
+      }
+      
+      .loading-emoji {
+        font-size: 60px;
+        margin-bottom: 20px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      /* Ensure no flash of unstyled content */
+      #root {
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
+      }
+      
+      #root.loaded {
+        opacity: 1;
       }
     </style>
   </head>
   <body>
+    <!-- No JavaScript Warning -->
     <noscript>
-      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-        <h1>JavaScript Required</h1>
-        <p>You need to enable JavaScript to run DROPLIFE application.</p>
+      <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif; background: #fff3cd; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+        <h1 style="color: #856404; margin-bottom: 10px;">JavaScript Required</h1>
+        <p style="color: #856404; font-size: 16px; max-width: 500px;">
+          You need to enable JavaScript to run the DROPLIFE application.
+          <br><br>
+          Please enable JavaScript in your browser settings and refresh this page.
+        </p>
       </div>
     </noscript>
     
     <!-- Loading Screen -->
     <div id="loading-screen">
+      <div class="loading-emoji">🩸</div>
       <div class="loader"></div>
       <div class="loading-text">Loading DROPLIFE...</div>
     </div>
     
+    <!-- React App Root -->
     <div id="root"></div>
     
+    <!-- Loading Screen Controller -->
     <script>
       // Hide loading screen when React app loads
       window.addEventListener('load', function() {
         setTimeout(function() {
           const loadingScreen = document.getElementById('loading-screen');
+          const root = document.getElementById('root');
+          
           if (loadingScreen) {
             loadingScreen.classList.add('hidden');
-            setTimeout(() => loadingScreen.remove(), 500);
+            setTimeout(() => {
+              loadingScreen.remove();
+              if (root) {
+                root.classList.add('loaded');
+              }
+            }, 500);
           }
         }, 1000);
       });
+      
+      // Fallback: Force hide after 5 seconds
+      setTimeout(function() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.remove();
+          const root = document.getElementById('root');
+          if (root) {
+            root.classList.add('loaded');
+          }
+        }
+      }, 5000);
     </script>
   </body>
 </html>
