@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Form, InputGroup, Button } from 'react-bootstrap';
+import React, { useEffect, useState, useCallback } from 'react';import { Container, Row, Col, Card, Table, Badge, Form, InputGroup, Button } from 'react-bootstrap';
 import { FaSearch, FaCheckCircle, FaTrash } from 'react-icons/fa';
 import api from '../services/api';
 import { toast } from 'react-toastify';
@@ -11,11 +10,7 @@ const DonorList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBloodGroup, setFilterBloodGroup] = useState('');
 
-  useEffect(() => {
-    fetchDonors();
-  }, [filterBloodGroup]);
-
-  const fetchDonors = async () => {
+  const fetchDonors = useCallback(async () => {
     try {
       const url = filterBloodGroup
         ? `/admin/donors?bloodGroup=${filterBloodGroup}`
@@ -27,7 +22,11 @@ const DonorList = () => {
       toast.error('Failed to fetch donors');
       setLoading(false);
     }
-  };
+  }, [filterBloodGroup]); // Add filterBloodGroup as dependency
+
+  useEffect(() => {
+    fetchDonors();
+  }, [fetchDonors]);
 
   const handleVerify = async (donorId) => {
     try {

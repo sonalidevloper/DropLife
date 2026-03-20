@@ -16,10 +16,42 @@ const Footer = () => {
               in real-time to save lives.
             </p>
             <div className="social-icons mt-3">
-              <a href="#" className="text-light me-3"><FaFacebook size={24} /></a>
-              <a href="#" className="text-light me-3"><FaTwitter size={24} /></a>
-              <a href="#" className="text-light me-3"><FaInstagram size={24} /></a>
-              <a href="#" className="text-light"><FaLinkedin size={24} /></a>
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-light me-3"
+                aria-label="Facebook"
+              >
+                <FaFacebook size={24} />
+              </a>
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-light me-3"
+                aria-label="Twitter"
+              >
+                <FaTwitter size={24} />
+              </a>
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-light me-3"
+                aria-label="Instagram"
+              >
+                <FaInstagram size={24} />
+              </a>
+              <a 
+                href="https://linkedin.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-light"
+                aria-label="LinkedIn"
+              >
+                <FaLinkedin size={24} />
+              </a>
             </div>
           </Col>
           
@@ -50,7 +82,9 @@ const Footer = () => {
             </p>
             <p className="mt-3">
               <strong>Emergency Helpline:</strong><br />
-              <span className="text-danger fs-4">1800-123-4567</span>
+              <a href="tel:18001234567" className="text-danger fs-4">
+                1800-123-4567
+              </a>
             </p>
           </Col>
         </Row>

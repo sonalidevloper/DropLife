@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form } from 'react-bootstrap';
+import React, { useEffect, useState, useCallback } from 'react';import { Container, Row, Col, Card, Button, Badge, Form } from 'react-bootstrap';
 import { FaCampground, FaCalendar, FaMapMarkerAlt, FaClock, FaUsers } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import api from '../services/api';
@@ -11,13 +10,10 @@ const DonationCamps = () => {
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('list');
   const { user, token } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    fetchCamps();
-  }, [filter]);
-
-  const fetchCamps = async () => {
+  const fetchCamps = useCallback(async () => {
     try {
       const response = await api.get(`/camps?status=${filter === 'upcoming' ? 'Upcoming' : ''}&upcoming=${filter === 'upcoming'}`);
       setCamps(response.data.data);
@@ -26,7 +22,11 @@ const DonationCamps = () => {
       console.error('Failed to fetch camps');
       setLoading(false);
     }
-  };
+  }, [filter]); // Add filter as dependency
+
+  useEffect(() => {
+    fetchCamps();
+  }, [fetchCamps]);
 
   const handleRegister = async (campId) => {
     if (!token) {

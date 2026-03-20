@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge } from 'react-bootstrap';
-import { FaTint, FaPlus, FaMinus } from 'react-icons/fa';
+import { FaPlus, FaMinus } from 'react-icons/fa';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/LoadingSpinner';
