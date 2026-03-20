@@ -28,7 +28,7 @@ import Footer from './components/Footer';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="App">
         <Navbar />
         <Routes>
@@ -80,6 +80,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* 404 Route */}
+          <Route path="*" element={<Home />} />
         </Routes>
         <Footer />
         <ToastContainer
@@ -92,6 +95,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          theme="colored"
         />
       </div>
     </Router>
