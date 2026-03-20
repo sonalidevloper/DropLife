@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Etusivu", "bloodRequest": "Verenpyyntö", "bloodAvailability": "Veren saatavuus", "camps": "Verenluovutusleirit", "about": "Tietoa meistä", "contact": "Yhteystiedot", "map": "Löydä luovuttajia", "analytics": "Analytiikka", "notifications": "Ilmoitukset", "login": "Kirjaudu", "register": "Rekisteröidy", "logout": "Kirjaudu ulos", "dashboard": "Kojelauta", "hospitals": "Sairaalat" },
+  "home": { "title": "Pelasta henkiä, lahjoita verta", "subtitle": "Yhdistä luovuttajat apua tarvitseviin potilaisiin" },
+  "auth": { "login": "Kirjaudu", "register": "Rekisteröidy", "email": "Sähköposti", "password": "Salasana", "name": "Koko nimi", "signIn": "Kirjaudu", "signUp": "Rekisteröidy" },
+  "common": { "save": "Tallenna", "cancel": "Peruuta", "loading": "Ladataan...", "search": "Hae", "submit": "Lähetä", "close": "Sulje", "error": "Virhe", "success": "Menestys" }
+}

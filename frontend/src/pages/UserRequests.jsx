@@ -12,7 +12,7 @@ const UserRequests = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/blood-requests/my').then(res => {
+    api.get('/blood-request/my').then(res => {
       setRequests(res.data.data || res.data || []);
     }).catch(() => {
       toast.error('Failed to load requests');
@@ -22,7 +22,7 @@ const UserRequests = () => {
   const cancelRequest = async (id) => {
     if (!window.confirm('Cancel this request?')) return;
     try {
-      await api.put(`/blood-requests/${id}/cancel`);
+      await api.put(`/blood-request/${id}/cancel`);
       setRequests(prev => prev.map(r => r._id === id ? { ...r, status: 'cancelled' } : r));
       toast.success('Request cancelled');
     } catch {

@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Hjem", "bloodRequest": "Blodforespørsel", "bloodAvailability": "Blodtilgjengelighet", "camps": "Blodgivningsleirer", "about": "Om oss", "contact": "Kontakt", "map": "Finn givere", "analytics": "Analyser", "notifications": "Varsler", "login": "Logg inn", "register": "Registrer", "logout": "Logg ut", "dashboard": "Dashbord", "hospitals": "Sykehus" },
+  "home": { "title": "Redd liv, gi blod", "subtitle": "Koble givere med pasienter i nød" },
+  "auth": { "login": "Logg inn", "register": "Registrer", "email": "E-post", "password": "Passord", "name": "Fullt navn", "signIn": "Logg inn", "signUp": "Registrer" },
+  "common": { "save": "Lagre", "cancel": "Avbryt", "loading": "Laster...", "search": "Søk", "submit": "Send", "close": "Lukk", "error": "Feil", "success": "Suksess" }
+}

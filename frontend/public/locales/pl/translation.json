@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Strona główna", "bloodRequest": "Prośba o krew", "bloodAvailability": "Dostępność krwi", "camps": "Obozy krwiodawstwa", "about": "O nas", "contact": "Kontakt", "map": "Znajdź dawcę", "analytics": "Analityka", "notifications": "Powiadomienia", "login": "Zaloguj się", "register": "Zarejestruj się", "logout": "Wyloguj się", "dashboard": "Panel", "hospitals": "Szpitale" },
+  "home": { "title": "Ratuj życie, oddaj krew", "subtitle": "Połącz dawców z potrzebującymi pacjentami" },
+  "auth": { "login": "Zaloguj się", "register": "Zarejestruj się", "email": "Email", "password": "Hasło", "name": "Pełne imię", "signIn": "Zaloguj", "signUp": "Zarejestruj" },
+  "common": { "save": "Zapisz", "cancel": "Anuluj", "loading": "Ładowanie...", "search": "Szukaj", "submit": "Wyślij", "close": "Zamknij", "error": "Błąd", "success": "Sukces" }
+}

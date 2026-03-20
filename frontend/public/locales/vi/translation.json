@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Trang chủ", "bloodRequest": "Yêu cầu máu", "bloodAvailability": "Tình trạng máu", "camps": "Trại hiến máu", "about": "Về chúng tôi", "contact": "Liên hệ", "map": "Tìm người hiến máu", "analytics": "Phân tích", "notifications": "Thông báo", "login": "Đăng nhập", "register": "Đăng ký", "logout": "Đăng xuất", "dashboard": "Bảng điều khiển", "hospitals": "Bệnh viện" },
+  "home": { "title": "Cứu sống, Hiến máu", "subtitle": "Kết nối người hiến máu với bệnh nhân cần giúp đỡ" },
+  "auth": { "login": "Đăng nhập", "register": "Đăng ký", "email": "Email", "password": "Mật khẩu", "name": "Họ và tên", "signIn": "Đăng nhập", "signUp": "Đăng ký" },
+  "common": { "save": "Lưu", "cancel": "Hủy", "loading": "Đang tải...", "search": "Tìm kiếm", "submit": "Gửi", "close": "Đóng", "error": "Lỗi", "success": "Thành công" }
+}

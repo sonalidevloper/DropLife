@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "דף הבית", "bloodRequest": "בקשת דם", "bloodAvailability": "זמינות דם", "camps": "מחנות תרומה", "about": "אודותינו", "contact": "צור קשר", "map": "מצא תורמים", "analytics": "ניתוח", "notifications": "התראות", "login": "התחבר", "register": "הירשם", "logout": "התנתק", "dashboard": "לוח בקרה", "hospitals": "בתי חולים" },
+  "home": { "title": "הצל חיים, תרום דם", "subtitle": "חיבור תורמים עם חולים הזקוקים לעזרה" },
+  "auth": { "login": "התחבר", "register": "הירשם", "email": "אימייל", "password": "סיסמה", "name": "שם מלא", "signIn": "כניסה", "signUp": "הרשמה" },
+  "common": { "save": "שמור", "cancel": "בטל", "loading": "טוען...", "search": "חפש", "submit": "שלח", "close": "סגור", "error": "שגיאה", "success": "הצלחה" }
+}

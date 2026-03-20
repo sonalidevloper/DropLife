@@ -163,10 +163,11 @@ const HospitalsPublic = () => {
                 </Card.Body>
                 <Card.Footer className="bg-white border-top-0 d-flex gap-2">
                   <Button
+                    as={Link}
+                    to={`/hospitals/${h._id}`}
                     variant="outline-danger"
                     size="sm"
                     className="flex-grow-1"
-                    onClick={() => setSelected(h)}
                   >
                     View Details
                   </Button>

@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "መነሻ", "bloodRequest": "የደም ጥያቄ", "bloodAvailability": "የደም ተጠቃሚነት", "camps": "የደም ልገሳ ካምፕ", "about": "ስለ እኛ", "contact": "አያያዝ", "map": "ለጋሾችን ፈልግ", "analytics": "ትንታኔ", "notifications": "ማሳወቂያዎች", "login": "ግባ", "register": "ተመዝገብ", "logout": "ውጣ", "dashboard": "ዳሽቦርድ", "hospitals": "ሆስፒታሎች" },
+  "home": { "title": "ሕይወት አድን፣ ደም ለግስ", "subtitle": "ለጋሾችን ከሚፈልጉ ታካሚዎች ጋር ያገናኛል" },
+  "auth": { "login": "ግባ", "register": "ተመዝገብ", "email": "ኢሜይል", "password": "የምስጢር ቃል", "name": "ሙሉ ስም", "signIn": "ግባ", "signUp": "ተመዝገብ" },
+  "common": { "save": "አስቀምጥ", "cancel": "ሰርዝ", "loading": "እየጫነ ነው...", "search": "ፈልግ", "submit": "አስገባ", "close": "ዝጋ", "error": "ስህተት", "success": "ስኬት" }
+}

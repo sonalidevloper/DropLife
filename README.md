@@ -81,7 +81,7 @@ A comprehensive MERN stack application connecting blood donors, recipients, hosp
 - ✅ **Interactive map** (React Leaflet + OpenStreetMap)
 - ✅ **Analytics dashboards** (Recharts)
 - ✅ **Voice assistant** (Web Speech API)
-- ✅ **Multi-language support** (40+ languages via i18next)
+- ✅ **Multi-language support** (38 languages via i18next)
 - ✅ **In-app notifications** with real-time bell indicator
 - ✅ **Blood delivery tracking** system
 - ✅ Rate limiting for API security (express-rate-limit)
@@ -142,9 +142,9 @@ DropLife/
 │   ├── routes/
 │   │   ├── auth.js         # 8 routes
 │   │   ├── donor.js        # 5 routes
-│   │   ├── bloodRequest.js # 5 routes
+│   │   ├── bloodRequest.js # 7 routes
 │   │   ├── camp.js         # 6 routes
-│   │   ├── admin.js        # 8 routes
+│   │   ├── admin.js        # 6 routes
 │   │   ├── hospital.js     # 13 routes (NEW)
 │   │   ├── notification.js # 5 routes (NEW)
 │   │   ├── delivery.js     # 7 routes (NEW)
@@ -171,7 +171,7 @@ DropLife/
 │   │   │   ├── ProtectedRoute.jsx     # Updated: hospitalOnly prop
 │   │   │   ├── LoadingSpinner.jsx
 │   │   │   ├── SplitTextAnimation.jsx
-│   │   │   ├── LanguageSelector.jsx   # 40+ languages (NEW)
+│   │   │   ├── LanguageSelector.jsx   # 38 languages (NEW)
 │   │   │   ├── NotificationBell.jsx   # Real-time bell (NEW)
 │   │   │   └── VoiceAssistant.jsx     # Voice navigation (NEW)
 │   │   ├── pages/

@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Hem", "bloodRequest": "Blodbegäran", "bloodAvailability": "Blodtillgänglighet", "camps": "Blodgivningsläger", "about": "Om oss", "contact": "Kontakt", "map": "Hitta givare", "analytics": "Analys", "notifications": "Aviseringar", "login": "Logga in", "register": "Registrera", "logout": "Logga ut", "dashboard": "Instrumentpanel", "hospitals": "Sjukhus" },
+  "home": { "title": "Rädda liv, donera blod", "subtitle": "Koppla givare med patienter i nöd" },
+  "auth": { "login": "Logga in", "register": "Registrera", "email": "E-post", "password": "Lösenord", "name": "Fullständigt namn", "signIn": "Logga in", "signUp": "Registrera" },
+  "common": { "save": "Spara", "cancel": "Avbryt", "loading": "Laddar...", "search": "Sök", "submit": "Skicka", "close": "Stäng", "error": "Fel", "success": "Framgång" }
+}

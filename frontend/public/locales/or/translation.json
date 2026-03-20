@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "ମୁଖ୍ୟ ପୃଷ୍ଠା", "bloodRequest": "ରକ୍ତ ଅନୁରୋଧ", "bloodAvailability": "ରକ୍ତ ଉପଲବ୍ଧତା", "camps": "ଦାନ ଶିବିର", "about": "ଆମ ବିଷୟରେ", "contact": "ଯୋଗାଯୋଗ", "map": "ଦାତା ଖୋଜ", "analytics": "ବିଶ୍ଳେଷଣ", "notifications": "ବିଜ୍ଞପ୍ତି", "login": "ଲଗ ଇନ୍", "register": "ପଞ୍ଜୀକୃତ", "logout": "ଲଗ ଆଉଟ୍", "dashboard": "ଡ୍ୟାସ୍ବୋର୍ଡ", "hospitals": "ଡାକ୍ତରଖାନା" },
+  "home": { "title": "ଜୀବନ ବଞ୍ଚାଅ, ରକ୍ତ ଦାନ କର", "subtitle": "ଦାତାଙ୍କୁ ଆବଶ୍ୟକ ରୋଗୀଙ୍କ ସହ ସଂଯୋଗ କର" },
+  "auth": { "login": "ଲଗ ଇନ୍", "register": "ପଞ୍ଜୀକୃତ", "email": "ଇମେଲ", "password": "ପାସୱାର୍ଡ", "name": "ପୂର୍ଣ ନାମ", "signIn": "ସାଇନ ଇନ୍", "signUp": "ସାଇନ ଅପ" },
+  "common": { "save": "ସଂରକ୍ଷଣ କର", "cancel": "ବାତିଲ୍", "loading": "ଲୋଡ ହେଉଛି...", "search": "ଖୋଜ", "submit": "ଦାଖଲ", "close": "ବନ୍ଦ", "error": "ତ୍ରୁଟି", "success": "ସଫଳ" }
+}
