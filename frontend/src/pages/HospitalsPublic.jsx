@@ -157,7 +157,7 @@ const HospitalsPublic = () => {
                     </div>
                   )}
 
-                  {h.operatingHours?.is24Hours && (
+                  {h.operatingHours?.isOpen24Hours && (
                     <Badge bg="success" className="mb-2">24/7 Open</Badge>
                   )}
                 </Card.Body>
@@ -231,7 +231,7 @@ const HospitalsPublic = () => {
                 {selected.operatingHours && (
                   <div className="mt-1">
                     <strong>Hours:</strong>{' '}
-                    {selected.operatingHours.is24Hours
+                    {selected.operatingHours.isOpen24Hours
                       ? '24 Hours'
                       : `${selected.operatingHours.open} – ${selected.operatingHours.close}`}
                   </div>

@@ -112,7 +112,7 @@ const NotificationBell = () => {
               notifications.slice(0, 5).map((n) => (
                 <button
                   key={n._id}
-                  className={`dropdown-item d-flex flex-column py-2 border-bottom ${!n.read ? 'bg-light' : ''}`}
+                  className={`dropdown-item d-flex flex-column py-2 border-bottom ${!n.isRead ? 'bg-light' : ''}`}
                   onClick={() => markRead(n._id)}
                   style={{ whiteSpace: 'normal', textAlign: 'left' }}
                 >

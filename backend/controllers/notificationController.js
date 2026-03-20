@@ -1,15 +1,28 @@
 const Notification = require('../models/Notification');
 
-// @desc    Get user's notifications (latest 50)
-// @route   GET /api/notifications
+// @desc    Get user's notifications with pagination
+// @route   GET /api/notifications?page=1&limit=20
 // @access  Private
 exports.getNotifications = async (req, res) => {
   try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const total = await Notification.countDocuments({ recipient: req.user._id });
     const notifications = await Notification.find({ recipient: req.user._id })
       .sort({ createdAt: -1 })
-      .limit(50);
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json({ success: true, count: notifications.length, data: notifications });
+    res.status(200).json({
+      success: true,
+      count: notifications.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      notifications
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

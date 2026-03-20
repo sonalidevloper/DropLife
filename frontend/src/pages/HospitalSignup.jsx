@@ -60,7 +60,7 @@ const HospitalSignup = () => {
     type: '',
     address: { street: '', city: '', state: '', pincode: '' },
     hasBloodBank: false,
-    operatingHours: { open: '08:00', close: '20:00', is24Hours: false },
+    operatingHours: { open: '08:00', close: '20:00', isOpen24Hours: false },
     emergencyContact: { name: '', phone: '' },
     website: '',
   };
@@ -293,7 +293,7 @@ const HospitalSignup = () => {
                         <Form.Control
                           type="time" name="operatingHours.open" value={values.operatingHours.open}
                           onChange={handleChange}
-                          disabled={values.operatingHours.is24Hours}
+                          disabled={values.operatingHours.isOpen24Hours}
                         />
                       </Form.Group>
                     </Col>
@@ -303,17 +303,17 @@ const HospitalSignup = () => {
                         <Form.Control
                           type="time" name="operatingHours.close" value={values.operatingHours.close}
                           onChange={handleChange}
-                          disabled={values.operatingHours.is24Hours}
+                          disabled={values.operatingHours.isOpen24Hours}
                         />
                       </Form.Group>
                     </Col>
                     <Col md={3} className="d-flex align-items-end">
                       <Form.Check
                         type="switch"
-                        id="is24Hours"
-                        name="operatingHours.is24Hours"
+                        id="isOpen24Hours"
+                        name="operatingHours.isOpen24Hours"
                         label="24 Hours"
-                        checked={values.operatingHours.is24Hours}
+                        checked={values.operatingHours.isOpen24Hours}
                         onChange={handleChange}
                         className="mb-2"
                       />

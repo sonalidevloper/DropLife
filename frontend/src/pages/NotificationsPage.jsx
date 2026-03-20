@@ -60,7 +60,7 @@ const NotificationsPage = () => {
     try {
       await api.put(`/notifications/${id}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
       );
     } catch {
       // silently fail
@@ -97,12 +97,12 @@ const NotificationsPage = () => {
   };
 
   const filtered = notifications.filter((n) => {
-    if (filter === 'Unread') return !n.read;
-    if (filter === 'Read') return n.read;
+    if (filter === 'Unread') return !n.isRead;
+    if (filter === 'Read') return n.isRead;
     return true;
   });
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <Container className="py-4" style={{ maxWidth: 800 }}>
@@ -167,9 +167,9 @@ const NotificationsPage = () => {
           {filtered.map((n) => (
             <Card
               key={n._id}
-              className={`mb-2 shadow-sm ${!n.read ? 'border-start border-4 border-danger' : ''}`}
-              style={{ cursor: !n.read ? 'pointer' : 'default' }}
-              onClick={() => !n.read && markRead(n._id)}
+              className={`mb-2 shadow-sm ${!n.isRead ? 'border-start border-4 border-danger' : ''}`}
+              style={{ cursor: !n.isRead ? 'pointer' : 'default' }}
+              onClick={() => !n.isRead && markRead(n._id)}
             >
               <Card.Body className="d-flex align-items-start gap-3 py-3">
                 <div style={{ fontSize: '1.6rem', lineHeight: 1 }}>
@@ -179,7 +179,7 @@ const NotificationsPage = () => {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="fw-semibold">
                       {n.title || 'Notification'}
-                      {!n.read && <Badge bg="danger" className="ms-2 small">New</Badge>}
+                      {!n.isRead && <Badge bg="danger" className="ms-2 small">New</Badge>}
                     </div>
                     <div className="text-muted small ms-2 text-nowrap">
                       {n.createdAt ? timeAgo(n.createdAt) : ''}
@@ -188,7 +188,7 @@ const NotificationsPage = () => {
                   <p className="mb-0 text-muted small mt-1">{n.message}</p>
                 </div>
                 <div className="d-flex flex-column gap-1">
-                  {!n.read && (
+                  {!n.isRead && (
                     <Button
                       variant="outline-success"
                       size="sm"

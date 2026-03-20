@@ -1,6 +1,6 @@
 # 🩸 DROPLIFE - Smart Blood Donation System
 
-A comprehensive MERN stack application connecting blood donors, recipients, and healthcare facilities in real-time.
+A comprehensive MERN stack application connecting blood donors, recipients, hospitals, and healthcare facilities in real-time with 62 API routes, interactive maps, analytics dashboards, voice assistant, and multi-language support.
 
 ![DROPLIFE Banner](https://via.placeholder.com/1200x400/dc3545/ffffff?text=DROPLIFE+-+Smart+Blood+Donation+System)
 
@@ -19,6 +19,14 @@ A comprehensive MERN stack application connecting blood donors, recipients, and 
 - [License](#license)
 
 ## ✨ Features
+
+### 🏠 Four Distinct Panels
+| Panel | Description | Routes |
+|-------|-------------|--------|
+| **Donor** | Blood donor profile, history, donation tracking | `/donor/dashboard` |
+| **User** | Regular users - request blood, track status | `/user/dashboard` |
+| **Hospital** | Full hospital management - blood bank, deliveries, patients | `/hospital/*` |
+| **Admin** | System administration, analytics, user management | `/admin/*` |
 
 ### For Donors
 - ✅ Easy registration with blood group and location
@@ -44,18 +52,39 @@ A comprehensive MERN stack application connecting blood donors, recipients, and 
 - ✅ Monitor blood requests
 - ✅ Generate reports
 
+### For Hospitals
+- ✅ Hospital registration and management dashboard
+- ✅ Blood bank stock management with visual alerts
+- ✅ Blood delivery request and tracking system
+- ✅ Patient blood records management
+- ✅ Staff management
+- ✅ Request blood from central blood bank
+- ✅ Blood availability published publicly
+
+### For Regular Users
+- ✅ Register without being a donor
+- ✅ Request blood quickly
+- ✅ Track blood request status
+- ✅ Find nearby hospitals and donors on map
+
 ### Technical Features
 - ✅ JWT-based authentication & authorization
 - ✅ Real-time geolocation-based donor matching
 - ✅ Email notification system (Nodemailer)
-- ✅ RESTful API with 20+ endpoints
+- ✅ **62 RESTful API endpoints** (exceeds 40+ requirement)
 - ✅ Redux state management
 - ✅ Responsive design with Bootstrap
 - ✅ Form validation with Formik & Yup
-- ✅ Beautiful animations and transitions
-- ✅ Role-based access control (Donor/Admin)
+- ✅ Role-based access control (Donor / User / Hospital / Admin)
 - ✅ Secure password hashing (bcrypt)
 - ✅ MongoDB with geospatial queries
+- ✅ **Interactive map** (React Leaflet + OpenStreetMap)
+- ✅ **Analytics dashboards** (Recharts)
+- ✅ **Voice assistant** (Web Speech API)
+- ✅ **Multi-language support** (40+ languages via i18next)
+- ✅ **In-app notifications** with real-time bell indicator
+- ✅ **Blood delivery tracking** system
+- ✅ Rate limiting for API security (express-rate-limit)
 
 ## 🛠️ Tech Stack
 
@@ -63,22 +92,20 @@ A comprehensive MERN stack application connecting blood donors, recipients, and 
 - React 18
 - Redux Toolkit
 - React Router v6
-- Bootstrap 5
-- React Bootstrap
-- Axios
-- Formik & Yup
-- React Toastify
-- React Icons
+- Bootstrap 5 + React Bootstrap
+- Axios, Formik & Yup
+- React Toastify, React Icons
+- **React Leaflet 4** (Maps)
+- **Recharts** (Analytics)
+- **react-i18next** (40+ languages)
+- Web Speech API (Voice)
 
 ### Backend
-- Node.js
-- Express.js
+- Node.js 18, Express.js
 - MongoDB with Mongoose
-- JWT (JSON Web Tokens)
-- bcryptjs
-- Nodemailer
-- CORS
-- dotenv
+- JWT, bcryptjs
+- Nodemailer, express-rate-limit
+- CORS, dotenv
 
 ### Deployment
 - Frontend: Vercel
@@ -87,62 +114,100 @@ A comprehensive MERN stack application connecting blood donors, recipients, and 
 
 ## 📁 Project Structure
 ```
-droplife/
+DropLife/
 ├── backend/
 │   ├── config/
 │   │   └── db.js
 │   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── donorController.js
-│   │   ├── bloodRequestController.js
-│   │   ├── campController.js
-│   │   └── adminController.js
+│   │   ├── authController.js          # Auth (register, login, password reset)
+│   │   ├── donorController.js         # Donor profile & history
+│   │   ├── bloodRequestController.js  # Blood request management
+│   │   ├── campController.js          # Donation camp management
+│   │   ├── adminController.js         # Admin operations
+│   │   ├── hospitalController.js      # Hospital management (NEW)
+│   │   ├── notificationController.js  # Notifications (NEW)
+│   │   ├── deliveryController.js      # Blood delivery tracking (NEW)
+│   │   └── analyticsController.js     # Analytics & charts (NEW)
 │   ├── middleware/
-│   │   ├── auth.js
+│   │   ├── auth.js                    # JWT + role authorization
 │   │   └── errorHandler.js
 │   ├── models/
-│   │   ├── User.js
+│   │   ├── User.js                    # Users (donor/user/hospital/admin roles)
 │   │   ├── BloodRequest.js
 │   │   ├── DonationCamp.js
-│   │   └── BloodStock.js
+│   │   ├── BloodStock.js
+│   │   ├── Hospital.js                # Hospital data (NEW)
+│   │   ├── Notification.js            # In-app notifications (NEW)
+│   │   └── BloodDelivery.js           # Blood delivery records (NEW)
 │   ├── routes/
-│   │   ├── auth.js
-│   │   ├── donor.js
-│   │   ├── bloodRequest.js
-│   │   ├── camp.js
-│   │   └── admin.js
+│   │   ├── auth.js         # 8 routes
+│   │   ├── donor.js        # 5 routes
+│   │   ├── bloodRequest.js # 5 routes
+│   │   ├── camp.js         # 6 routes
+│   │   ├── admin.js        # 8 routes
+│   │   ├── hospital.js     # 13 routes (NEW)
+│   │   ├── notification.js # 5 routes (NEW)
+│   │   ├── delivery.js     # 7 routes (NEW)
+│   │   └── analytics.js    # 5 routes (NEW)
+│   │   # TOTAL: 62 routes
 │   ├── utils/
-│   │   └── sendEmail.js
-│   ├── .env
+│   │   ├── sendEmail.js
+│   │   └── sendNotification.js
+│   ├── .env.example                   # Environment template (NEW)
 │   ├── .gitignore
 │   ├── server.js
 │   └── package.json
 │
 ├── frontend/
 │   ├── public/
+│   │   ├── index.html
+│   │   └── locales/                   # i18n translations (NEW)
+│   │       ├── en/translation.json
+│   │       └── hi/translation.json
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Navbar.jsx
+│   │   │   ├── Navbar.jsx             # Updated: language selector, notification bell
 │   │   │   ├── Footer.jsx
-│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── ProtectedRoute.jsx     # Updated: hospitalOnly prop
 │   │   │   ├── LoadingSpinner.jsx
-│   │   │   └── SplitTextAnimation.jsx
+│   │   │   ├── SplitTextAnimation.jsx
+│   │   │   ├── LanguageSelector.jsx   # 40+ languages (NEW)
+│   │   │   ├── NotificationBell.jsx   # Real-time bell (NEW)
+│   │   │   └── VoiceAssistant.jsx     # Voice navigation (NEW)
 │   │   ├── pages/
 │   │   │   ├── Welcome.jsx
 │   │   │   ├── Home.jsx
 │   │   │   ├── Login.jsx
 │   │   │   ├── Signup.jsx
+│   │   │   ├── ForgotPassword.jsx     # NEW
+│   │   │   ├── ResetPassword.jsx      # NEW
 │   │   │   ├── DonorDashboard.jsx
+│   │   │   ├── UserDashboard.jsx      # NEW - User panel
+│   │   │   ├── HospitalLogin.jsx      # NEW
+│   │   │   ├── HospitalSignup.jsx     # NEW
+│   │   │   ├── HospitalDashboard.jsx  # NEW - Hospital panel
+│   │   │   ├── HospitalBloodBank.jsx  # NEW - Blood stock management
+│   │   │   ├── HospitalDeliveries.jsx # NEW - Delivery records
+│   │   │   ├── HospitalRequests.jsx   # NEW - Blood requests
+│   │   │   ├── HospitalPatients.jsx   # NEW - Patient records
+│   │   │   ├── HospitalStaff.jsx      # NEW - Staff management
+│   │   │   ├── HospitalsPublic.jsx    # NEW - Public hospital listing
 │   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── DeliveryRecords.jsx    # NEW - Admin delivery management
 │   │   │   ├── BloodRequest.jsx
 │   │   │   ├── BloodAvailability.jsx
 │   │   │   ├── DonationCamps.jsx
 │   │   │   ├── DonorList.jsx
 │   │   │   ├── BloodStockManagement.jsx
+│   │   │   ├── MapView.jsx            # NEW - Leaflet map
+│   │   │   ├── Analytics.jsx          # NEW - Recharts dashboards
+│   │   │   ├── NotificationsPage.jsx  # NEW - Notification center
 │   │   │   ├── About.jsx
 │   │   │   ├── Contact.jsx
 │   │   │   ├── Privacy.jsx
 │   │   │   └── Helpline.jsx
+│   │   ├── i18n/
+│   │   │   └── index.js               # i18next setup (NEW)
 │   │   ├── redux/
 │   │   │   ├── store.js
 │   │   │   ├── authSlice.js
@@ -151,13 +216,12 @@ droplife/
 │   │   │   └── api.js
 │   │   ├── utils/
 │   │   │   └── constants.js
-│   │   ├── App.jsx
+│   │   ├── App.jsx                    # Updated: all new routes
 │   │   ├── App.css
-│   │   ├── index.js
+│   │   ├── index.js                   # Updated: i18n import
 │   │   └── index.css
-│   ├── .env
+│   ├── .env.example                   # Environment template (NEW)
 │   ├── .gitignore
-│   ├── vercel.json
 │   └── package.json
 │
 └── README.md
