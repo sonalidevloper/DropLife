@@ -27,16 +27,13 @@ const userSchema = new mongoose.Schema({
   },
   bloodGroup: {
     type: String,
-    required: [true, 'Please provide your blood group'],
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
   },
   dateOfBirth: {
-    type: Date,
-    required: [true, 'Please provide your date of birth']
+    type: Date
   },
   gender: {
     type: String,
-    required: true,
     enum: ['Male', 'Female', 'Other']
   },
   address: {
@@ -91,7 +88,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['donor', 'admin'],
+    enum: ['donor', 'admin', 'user', 'hospital'],
     default: 'donor'
   },
   isVerified: {
