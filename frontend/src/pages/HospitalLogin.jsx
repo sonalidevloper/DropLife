@@ -9,9 +9,9 @@ import { FaTint } from 'react-icons/fa';
 import api from '../services/api';
 import { login } from '../redux/authSlice';
 
-const schema = Yup.object({
-  email: Yup.string().email().required(),
-  password: Yup.string().min(6).required()
+const validationSchema = Yup.object({
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
 });
 
 const HospitalLogin = () => {
@@ -24,19 +24,23 @@ const HospitalLogin = () => {
 
       const { token, hospital } = res.data;
 
-      const user = { ...hospital, role: 'hospital' };
+      const userObj = { ...hospital, role: 'hospital' };
 
-      // ❗ FIX: proper Redux dispatch
-      dispatch(login({ token, user }));
+      // ✅ Correct Redux dispatch
+      dispatch(login({ token, user: userObj }));
 
+      // ✅ Persist
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userObj));
 
-      toast.success('Login success');
+      toast.success('Welcome to Hospital Portal!');
       navigate('/hospital/dashboard');
 
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed';
+      const msg =
+        err.response?.data?.message ||
+        'Login failed. Check your credentials.';
+
       setStatus(msg);
       toast.error(msg);
     } finally {
@@ -45,46 +49,109 @@ const HospitalLogin = () => {
   };
 
   return (
-    <Container className="py-5">
-      <Card className="p-4">
+    <div
+      className="min-vh-100 d-flex align-items-center"
+      style={{ background: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)' }}
+    >
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={5}>
 
-        <h3><FaTint /> Hospital Login</h3>
+            <div className="text-center mb-4">
+              <FaTint className="text-danger" style={{ fontSize: '3rem' }} />
+              <h2 className="fw-bold mt-2">Hospital Portal Login</h2>
+              <p className="text-muted">
+                Access your hospital management dashboard
+              </p>
+            </div>
 
-        <Formik
-          initialValues={{ email: '', password: '' }}
-          validationSchema={schema}
-          onSubmit={handleSubmit}
-        >
-          {({ handleSubmit, handleChange, values, status }) => (
-            <Form onSubmit={handleSubmit}>
+            <Card className="shadow border-0">
+              <Card.Body className="p-4">
 
-              {status && <Alert>{status}</Alert>}
+                <Formik
+                  initialValues={{ email: '', password: '' }}
+                  validationSchema={validationSchema}
+                  onSubmit={handleSubmit}
+                >
+                  {({
+                    values,
+                    errors,
+                    touched,
+                    handleChange,
+                    handleBlur,
+                    handleSubmit: formSubmit,
+                    isSubmitting,
+                    status
+                  }) => (
+                    <Form noValidate onSubmit={formSubmit}>
 
-              <Form.Control
-                name="email"
-                placeholder="Email"
-                value={values.email}
-                onChange={handleChange}
-              />
+                      {status && <Alert variant="danger">{status}</Alert>}
 
-              <Form.Control
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={values.password}
-                onChange={handleChange}
-              />
+                      <Form.Group className="mb-3">
+                        <Form.Label>Hospital Email</Form.Label>
+                        <Form.Control
+                          type="email"
+                          name="email"
+                          value={values.email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          isInvalid={touched.email && !!errors.email}
+                          placeholder="hospital@example.com"
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.email}
+                        </Form.Control.Feedback>
+                      </Form.Group>
 
-              <Button type="submit">Login</Button>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control
+                          type="password"
+                          name="password"
+                          value={values.password}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          isInvalid={touched.password && !!errors.password}
+                          placeholder="Enter password"
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.password}
+                        </Form.Control.Feedback>
+                      </Form.Group>
 
-            </Form>
-          )}
-        </Formik>
+                      <div className="d-flex justify-content-end mb-3">
+                        <Link to="/forgot-password" className="text-danger small">
+                          Forgot Password?
+                        </Link>
+                      </div>
 
-        <Link to="/forgot-password">Forgot Password?</Link>
+                      <Button
+                        type="submit"
+                        variant="danger"
+                        className="w-100 fw-semibold"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Signing in...' : 'Sign In'}
+                      </Button>
 
-      </Card>
-    </Container>
+                    </Form>
+                  )}
+                </Formik>
+
+              </Card.Body>
+            </Card>
+
+            <div className="text-center mt-3">
+              <span className="text-muted">Don't have an account? </span>
+              <Link to="/hospital/register" className="text-danger fw-semibold">
+                Register your hospital
+              </Link>
+            </div>
+
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
