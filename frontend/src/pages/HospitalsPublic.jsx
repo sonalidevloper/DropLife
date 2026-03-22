@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container, Row, Col, Card, Button, Badge, Form, InputGroup, Modal, Pagination
+  Container, Row, Col, Card, Button, Badge, Form, InputGroup, Pagination
 } from 'react-bootstrap';
 import { FaHospital, FaSearch, FaPhone, FaMapMarkerAlt, FaMap } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -18,13 +18,13 @@ const HospitalsPublic = () => {
   const [typeFilter, setTypeFilter] = useState('All');
   const [bloodBankFilter, setBloodBankFilter] = useState('All');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     const fetchHospitals = async () => {
       try {
         const res = await api.get('/hospitals');
-        setHospitals(Array.isArray(res.data) ? res.data : res.data.hospitals || []);
+        const list = Array.isArray(res.data) ? res.data : (res.data.data || res.data.hospitals || []);
+        setHospitals(list);
       } catch {
         setHospitals([]);
       } finally {
@@ -46,8 +46,8 @@ const HospitalsPublic = () => {
       );
     }
     if (typeFilter !== 'All') data = data.filter((h) => h.type === typeFilter);
-    if (bloodBankFilter === 'Yes') data = data.filter((h) => h.hasBloodBank);
-    if (bloodBankFilter === 'No') data = data.filter((h) => !h.hasBloodBank);
+    if (bloodBankFilter === 'Yes') data = data.filter((h) => h.bloodBank?.hasBloodBank);
+    if (bloodBankFilter === 'No') data = data.filter((h) => !h.bloodBank?.hasBloodBank);
     setFiltered(data);
     setPage(1);
   }, [search, typeFilter, bloodBankFilter, hospitals]);
@@ -59,6 +59,15 @@ const HospitalsPublic = () => {
     Government: 'primary', Private: 'danger', Trust: 'success',
     Clinic: 'info', NGO: 'warning'
   }[type] || 'secondary');
+
+  // bloodAvailability is stored as [{bloodGroup, unitsAvailable}] — build a lookup map
+  const availabilityMap = (arr) => {
+    if (!Array.isArray(arr)) return {};
+    return arr.reduce((acc, item) => {
+      acc[item.bloodGroup] = item.unitsAvailable;
+      return acc;
+    }, {});
+  };
 
   return (
     <Container className="py-4">
@@ -119,70 +128,73 @@ const HospitalsPublic = () => {
         </div>
       ) : (
         <Row className="g-3">
-          {paginated.map((h) => (
-            <Col key={h._id} xs={12} sm={6} lg={4}>
-              <Card className="h-100 shadow-sm hover-shadow">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <h6 className="fw-bold mb-0">{h.name}</h6>
-                    <Badge bg={typeColor(h.type)}>{h.type}</Badge>
-                  </div>
+          {paginated.map((h) => {
+            const avail = availabilityMap(h.bloodAvailability);
+            return (
+              <Col key={h._id} xs={12} sm={6} lg={4}>
+                <Card className="h-100 shadow-sm hover-shadow">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <h6 className="fw-bold mb-0">{h.name}</h6>
+                      <Badge bg={typeColor(h.type)}>{h.type}</Badge>
+                    </div>
 
-                  <div className="text-muted small mb-2">
-                    <FaMapMarkerAlt className="me-1 text-danger" />
-                    {h.address?.city || '—'}{h.address?.state ? `, ${h.address.state}` : ''}
-                  </div>
-
-                  {h.phone && (
                     <div className="text-muted small mb-2">
-                      <FaPhone className="me-1" />{h.phone}
+                      <FaMapMarkerAlt className="me-1 text-danger" />
+                      {h.address?.city || '—'}{h.address?.state ? `, ${h.address.state}` : ''}
                     </div>
-                  )}
 
-                  {h.hasBloodBank && (
-                    <Badge bg="danger" className="mb-2">🩸 Blood Bank</Badge>
-                  )}
-
-                  {/* Blood availability summary */}
-                  {h.bloodAvailability && Object.keys(h.bloodAvailability).length > 0 && (
-                    <div className="mb-2">
-                      <small className="text-muted fw-semibold">Available: </small>
-                      <div className="d-flex flex-wrap gap-1 mt-1">
-                        {BLOOD_GROUPS.filter((bg) => Number(h.bloodAvailability[bg] || 0) > 0).map((bg) => (
-                          <Badge key={bg} bg="danger" style={{ fontSize: '0.65rem' }}>
-                            {bg}: {h.bloodAvailability[bg]}
-                          </Badge>
-                        ))}
+                    {h.phone && (
+                      <div className="text-muted small mb-2">
+                        <FaPhone className="me-1" />{h.phone}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {h.operatingHours?.isOpen24Hours && (
-                    <Badge bg="success" className="mb-2">24/7 Open</Badge>
-                  )}
-                </Card.Body>
-                <Card.Footer className="bg-white border-top-0 d-flex gap-2">
-                  <Button
-                    as={Link}
-                    to={`/hospitals/${h._id}`}
-                    variant="outline-danger"
-                    size="sm"
-                    className="flex-grow-1"
-                  >
-                    View Details
-                  </Button>
-                  <Button
-                    as={Link}
-                    to="/map"
-                    variant="outline-primary"
-                    size="sm"
-                  >
-                    <FaMap />
-                  </Button>
-                </Card.Footer>
-              </Card>
-            </Col>
-          ))}
+                    {h.bloodBank?.hasBloodBank && (
+                      <Badge bg="danger" className="mb-2">🩸 Blood Bank</Badge>
+                    )}
+
+                    {/* Blood availability summary */}
+                    {Object.keys(avail).length > 0 && (
+                      <div className="mb-2">
+                        <small className="text-muted fw-semibold">Available: </small>
+                        <div className="d-flex flex-wrap gap-1 mt-1">
+                          {BLOOD_GROUPS.filter((bg) => Number(avail[bg] || 0) > 0).map((bg) => (
+                            <Badge key={bg} bg="danger" style={{ fontSize: '0.65rem' }}>
+                              {bg}: {avail[bg]}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {h.operatingHours?.isOpen24Hours && (
+                      <Badge bg="success" className="mb-2">24/7 Open</Badge>
+                    )}
+                  </Card.Body>
+                  <Card.Footer className="bg-white border-top-0 d-flex gap-2">
+                    <Button
+                      as={Link}
+                      to={`/hospitals/${h._id}`}
+                      variant="outline-danger"
+                      size="sm"
+                      className="flex-grow-1"
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      as={Link}
+                      to="/map"
+                      variant="outline-primary"
+                      size="sm"
+                    >
+                      <FaMap />
+                    </Button>
+                  </Card.Footer>
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       )}
 
@@ -203,86 +215,6 @@ const HospitalsPublic = () => {
             <Pagination.Next disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} />
           </Pagination>
         </div>
-      )}
-
-      {/* Details Modal */}
-      {selected && (
-        <Modal show onHide={() => setSelected(null)} centered size="lg">
-          <Modal.Header closeButton className="bg-danger text-white">
-            <Modal.Title>
-              <FaHospital className="me-2" />{selected.name}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Row className="g-3">
-              <Col md={6}>
-                <h6 className="fw-bold">Information</h6>
-                <div><strong>Type:</strong> <Badge bg={typeColor(selected.type)}>{selected.type}</Badge></div>
-                <div className="mt-1"><strong>Phone:</strong> {selected.phone || '—'}</div>
-                <div className="mt-1"><strong>Email:</strong> {selected.email || '—'}</div>
-                {selected.website && (
-                  <div className="mt-1">
-                    <strong>Website:</strong>{' '}
-                    <a href={selected.website} target="_blank" rel="noopener noreferrer">{selected.website}</a>
-                  </div>
-                )}
-                <div className="mt-1">
-                  <strong>Blood Bank:</strong> {selected.hasBloodBank ? '✅ Yes' : '❌ No'}
-                </div>
-                {selected.operatingHours && (
-                  <div className="mt-1">
-                    <strong>Hours:</strong>{' '}
-                    {selected.operatingHours.isOpen24Hours
-                      ? '24 Hours'
-                      : `${selected.operatingHours.open} – ${selected.operatingHours.close}`}
-                  </div>
-                )}
-              </Col>
-              <Col md={6}>
-                <h6 className="fw-bold">Address</h6>
-                <div>{selected.address?.street}</div>
-                <div>{selected.address?.city}, {selected.address?.state} {selected.address?.pincode}</div>
-
-                {selected.facilities?.length > 0 && (
-                  <div className="mt-3">
-                    <h6 className="fw-bold">Facilities</h6>
-                    <div className="d-flex flex-wrap gap-1">
-                      {selected.facilities.map((f) => (
-                        <Badge key={f} bg="light" text="dark" className="border">{f}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Col>
-            </Row>
-
-            {selected.bloodAvailability && Object.keys(selected.bloodAvailability).length > 0 && (
-              <div className="mt-3">
-                <h6 className="fw-bold">Blood Availability</h6>
-                <div className="d-flex flex-wrap gap-2">
-                  {BLOOD_GROUPS.map((bg) => {
-                    const units = Number(selected.bloodAvailability[bg] || 0);
-                    return (
-                      <div key={bg} className="text-center border rounded p-2" style={{ minWidth: 60 }}>
-                        <div className="fw-bold text-danger small">{bg}</div>
-                        <div className="fw-bold">{units}</div>
-                        <div style={{ fontSize: '0.65rem', color: units === 0 ? '#dc3545' : units < 5 ? '#fd7e14' : '#198754' }}>
-                          {units === 0 ? 'Empty' : units < 5 ? 'Low' : 'OK'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button as={Link} to="/map" variant="outline-primary">
-              <FaMap className="me-1" />Find on Map
-            </Button>
-            <Button variant="secondary" onClick={() => setSelected(null)}>Close</Button>
-          </Modal.Footer>
-        </Modal>
       )}
     </Container>
   );

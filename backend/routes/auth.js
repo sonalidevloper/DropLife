@@ -9,7 +9,8 @@ const {
   registerUser,
   forgotPassword,
   resetPassword,
-  updatePassword
+  updatePassword,
+  updateProfile
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -30,6 +31,7 @@ router.post('/register-user', authLimiter, registerUser);
 router.post('/login', authLimiter, login);
 router.post('/admin/login', authLimiter, adminLogin);
 router.get('/me', protect, getMe);
+router.put('/update-profile', protect, updateProfile);
 router.post('/forgot-password', passwordLimiter, forgotPassword);
 router.put('/reset-password/:token', passwordLimiter, resetPassword);
 router.put('/update-password', protect, updatePassword);

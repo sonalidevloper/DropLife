@@ -51,7 +51,7 @@ const HospitalDetail = () => {
                   <p className="text-muted mb-1"><FaMapMarkerAlt className="me-1" />{hospital.address?.city}, {hospital.address?.state}</p>
                   <div className="d-flex gap-2 flex-wrap">
                     {hospital.isVerified && <Badge bg="success"><FaCheckCircle /> Verified</Badge>}
-                    {hospital.hasBloodBank && <Badge bg="danger"><FaTint /> Blood Bank</Badge>}
+                    {hospital.bloodBank?.hasBloodBank && <Badge bg="danger"><FaTint /> Blood Bank</Badge>}
                     {hospital.type && <Badge bg="secondary">{hospital.type}</Badge>}
                     {hospital.operatingHours?.isOpen24Hours && <Badge bg="warning" text="dark"><FaClock /> 24/7 Open</Badge>}
                   </div>

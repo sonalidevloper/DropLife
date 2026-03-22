@@ -16,12 +16,18 @@ const DonationHistory = () => {
     const fetch = async () => {
       try {
         const res = await api.get('/donor/history');
-        const donations = res.data.data || res.data || [];
-        setHistory(donations);
-        const thisYear = donations.filter(d => new Date(d.date || d.createdAt).getFullYear() === new Date().getFullYear()).length;
-        const last = donations.length > 0 ? new Date(donations[0].date || donations[0].createdAt) : null;
-        const next = last ? new Date(last.getTime() + 56 * 24 * 60 * 60 * 1000) : null;
-        setStats({ total: donations.length, thisYear, lifeSaved: donations.length * 3, nextEligible: next });
+        const data = res.data.data || res.data;
+        // Backend returns stats object: { donationCount, lastDonationDate, canDonate }
+        // It does not yet store per-donation records, so history stays empty
+        const records = Array.isArray(data) ? data : [];
+        setHistory(records);
+        const total = Array.isArray(data) ? records.length : (data?.donationCount || 0);
+        const lastDate = Array.isArray(data)
+          ? (records.length > 0 ? new Date(records[0].date || records[0].createdAt) : null)
+          : (data?.lastDonationDate ? new Date(data.lastDonationDate) : null);
+        const thisYear = records.filter(d => new Date(d.date || d.createdAt).getFullYear() === new Date().getFullYear()).length;
+        const next = lastDate ? new Date(lastDate.getTime() + 56 * 24 * 60 * 60 * 1000) : null;
+        setStats({ total, thisYear, lifeSaved: total * 3, nextEligible: next });
       } catch {
         toast.error('Failed to load donation history');
       } finally {

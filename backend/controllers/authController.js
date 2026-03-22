@@ -382,3 +382,28 @@ exports.getMe = async (req, res) => {
     });
   }
 };
+
+// @desc    Update logged-in user's basic profile (name, phone, address)
+// @route   PUT /api/auth/update-profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, address } = req.body;
+
+    const fieldsToUpdate = {};
+    if (name) fieldsToUpdate.name = name;
+    if (phone) fieldsToUpdate.phone = phone;
+    if (address !== undefined) fieldsToUpdate.address = typeof address === 'string'
+      ? { street: address, city: req.user.address?.city || '', state: req.user.address?.state || '', pincode: req.user.address?.pincode || '' }
+      : address;
+
+    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
