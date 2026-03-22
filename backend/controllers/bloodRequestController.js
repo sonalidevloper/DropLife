@@ -252,6 +252,50 @@ exports.respondToBloodRequest = async (req, res) => {
   }
 };
 
+// @desc    Get blood requests made by the logged-in user
+// @route   GET /api/blood-request/my
+// @access  Private
+exports.getMyBloodRequests = async (req, res) => {
+  try {
+    const bloodRequests = await BloodRequest.find({ requestedBy: req.user.id })
+      .sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      count: bloodRequests.length,
+      data: bloodRequests
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Cancel a blood request (by the requester)
+// @route   PUT /api/blood-request/:id/cancel
+// @access  Private
+exports.cancelBloodRequest = async (req, res) => {
+  try {
+    const bloodRequest = await BloodRequest.findById(req.params.id);
+
+    if (!bloodRequest) {
+      return res.status(404).json({ success: false, message: 'Blood request not found' });
+    }
+
+    if (bloodRequest.requestedBy?.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to cancel this request' });
+    }
+
+    bloodRequest.status = 'Cancelled';
+    await bloodRequest.save();
+
+    res.status(200).json({ success: true, data: bloodRequest });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // Helper function to get compatible blood groups
 function getCompatibleBloodGroups(bloodGroup) {
   const compatibility = {
