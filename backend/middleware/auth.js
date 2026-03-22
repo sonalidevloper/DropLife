@@ -21,7 +21,7 @@ exports.protect = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'droplife_fallback_secret_change_in_prod');
     
     req.user = await User.findById(decoded.id);
     
