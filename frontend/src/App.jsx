@@ -1,12 +1,13 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { useSelector } from 'react-redux';
 import './App.css';
 
 // Public Pages
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
-import Register from './pages/Register'; // FIXED
+import Register from './pages/Register';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import About from './pages/About';
@@ -20,8 +21,8 @@ import DonorDashboard from './pages/DonorDashboard';
 // Hospital Pages
 import HospitalSignup from './pages/HospitalSignup';
 import HospitalDashboard from './pages/HospitalDashboard';
-import HospitalDetail from './pages/HospitalDetail'; // FIXED
-import HospitalPatients from './pages/HospitalPatients'; // FIXED
+import HospitalDetail from './pages/HospitalDetail';
+import HospitalPatients from './pages/HospitalPatients';
 import HospitalBloodBank from './pages/HospitalBloodBank';
 import HospitalsPublic from './pages/HospitalsPublic';
 
@@ -51,32 +52,99 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import NotFound from './pages/NotFound';
 
+// Protected Home component - only for logged in users
+const ProtectedHome = () => {
+  const { token } = useSelector((state) => state.auth);
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <Home />;
+};
+
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="App">
         <Navbar />
         <Routes>
-          {/* Public Routes */}
+          {/* Welcome Page - Always accessible */}
           <Route path="/" element={<Welcome />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/register" element={<Register />} />
+          
+          {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          
+          {/* Admin Auth */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          {/* Hospital Auth */}
+          <Route path="/hospital/signup" element={<HospitalSignup />} />
+          
+          {/* Protected Home - Requires login */}
+          <Route path="/home" element={<ProtectedHome />} />
+          
+          {/* Public Info Pages - Accessible without login */}
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/helpline" element={<Helpline />} />
-          <Route path="/blood-request" element={<BloodRequest />} />
-          <Route path="/blood-availability" element={<BloodAvailability />} />
-          <Route path="/camps" element={<DonationCamps />} />
-          <Route path="/map" element={<MapView />} />
-          <Route path="/hospitals" element={<HospitalsPublic />} />
-          <Route path="/hospitals/:id" element={<HospitalDetail />} />
           
-          {/* Donor Routes */}
+          {/* Protected Public Features - Requires login */}
+          <Route
+            path="/blood-request"
+            element={
+              <ProtectedRoute>
+                <BloodRequest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blood-availability"
+            element={
+              <ProtectedRoute>
+                <BloodAvailability />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/camps"
+            element={
+              <ProtectedRoute>
+                <DonationCamps />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/map"
+            element={
+              <ProtectedRoute>
+                <MapView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospitals"
+            element={
+              <ProtectedRoute>
+                <HospitalsPublic />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospitals/:id"
+            element={
+              <ProtectedRoute>
+                <HospitalDetail />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Donor Protected Routes */}
           <Route
             path="/donor/dashboard"
             element={
@@ -86,7 +154,7 @@ function App() {
             }
           />
           
-          {/* User Routes */}
+          {/* User Protected Routes */}
           <Route
             path="/user/dashboard"
             element={
@@ -96,8 +164,7 @@ function App() {
             }
           />
           
-          {/* Hospital Routes */}
-          <Route path="/hospital/signup" element={<HospitalSignup />} />
+          {/* Hospital Protected Routes */}
           <Route
             path="/hospital/dashboard"
             element={
@@ -123,8 +190,7 @@ function App() {
             }
           />
           
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Admin Protected Routes */}
           <Route
             path="/admin/dashboard"
             element={
@@ -158,7 +224,7 @@ function App() {
             }
           />
 
-          {/* 404 */}
+          {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
