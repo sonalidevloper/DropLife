@@ -12,7 +12,7 @@ connectDB();
 const app = express();
 
 // Body parser
-app.express.json());
+app.use(express.json());  // ✅ FIXED THIS LINE
 app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS
@@ -58,10 +58,14 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`
-
-                                            
-     🩸DROPLIFE API Server Running                                                
-      Port: ${PORT}                           
+╔════════════════════════════════════════════╗
+║                                            ║
+║     🩸 DROPLIFE API Server Running         ║
+║                                            ║
+║     Port: ${PORT}                           ║
+║     Environment: ${process.env.NODE_ENV || 'development'}              ║
+║                                            ║
+╚════════════════════════════════════════════╝
   `);
 });
 
