@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Hjem", "bloodRequest": "Blodanmodning", "bloodAvailability": "Blodtilgængelighed", "camps": "Bloddonationslejre", "about": "Om os", "contact": "Kontakt", "map": "Find donorer", "analytics": "Analyser", "notifications": "Notifikationer", "login": "Log ind", "register": "Tilmeld dig", "logout": "Log ud", "dashboard": "Dashboard", "hospitals": "Hospitaler" },
+  "home": { "title": "Red liv, donér blod", "subtitle": "Forbind donorer med patienter i nød" },
+  "auth": { "login": "Log ind", "register": "Tilmeld dig", "email": "E-mail", "password": "Adgangskode", "name": "Fulde navn", "signIn": "Log ind", "signUp": "Tilmeld dig" },
+  "common": { "save": "Gem", "cancel": "Annuller", "loading": "Indlæser...", "search": "Søg", "submit": "Send", "close": "Luk", "error": "Fejl", "success": "Succes" }
+}
