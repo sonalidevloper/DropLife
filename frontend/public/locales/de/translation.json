@@ -1,0 +1,6 @@
+{
+  "nav": { "home": "Startseite", "bloodRequest": "Blutanfrage", "bloodAvailability": "Blutverfügbarkeit", "camps": "Spendekampagnen", "about": "Über uns", "contact": "Kontakt", "map": "Spender finden", "analytics": "Analysen", "notifications": "Benachrichtigungen", "login": "Anmelden", "register": "Registrieren", "logout": "Abmelden", "dashboard": "Dashboard", "hospitals": "Krankenhäuser" },
+  "home": { "title": "Leben retten, Blut spenden", "subtitle": "Verbindet Spender mit hilfsbedürftigen Patienten" },
+  "auth": { "login": "Anmelden", "register": "Registrieren", "email": "E-Mail", "password": "Passwort", "name": "Vollständiger Name", "signIn": "Einloggen", "signUp": "Registrieren" },
+  "common": { "save": "Speichern", "cancel": "Abbrechen", "loading": "Laden...", "search": "Suchen", "submit": "Absenden", "close": "Schließen", "error": "Fehler", "success": "Erfolg", "delete": "Löschen", "edit": "Bearbeiten" }
+}

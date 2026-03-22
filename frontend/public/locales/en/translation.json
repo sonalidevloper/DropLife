@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "home": "Home",
+    "bloodRequest": "Blood Request",
+    "bloodAvailability": "Blood Availability",
+    "camps": "Donation Camps",
+    "about": "About",
+    "contact": "Contact",
+    "map": "Find Donors",
+    "analytics": "Analytics",
+    "notifications": "Notifications",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "hospitals": "Hospitals"
+  },
+  "home": {
+    "title": "Save Lives, Donate Blood",
+    "subtitle": "Connect donors with patients in need",
+    "findDonor": "Find a Donor",
+    "becomeDonor": "Become a Donor",
+    "stats": {
+      "donors": "Donors",
+      "requests": "Requests",
+      "hospitals": "Hospitals",
+      "livesaved": "Lives Saved"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "bloodGroup": "Blood Group",
+    "signIn": "Sign In",
+    "signUp": "Sign Up"
+  },
+  "donor": {
+    "dashboard": "Donor Dashboard",
+    "profile": "My Profile",
+    "history": "Donation History",
+    "available": "Available to Donate",
+    "unavailable": "Not Available",
+    "donate": "Donate Now",
+    "lastDonation": "Last Donation"
+  },
+  "hospital": {
+    "dashboard": "Hospital Dashboard",
+    "bloodBank": "Blood Bank",
+    "deliveries": "Deliveries",
+    "requests": "Blood Requests",
+    "patients": "Patients",
+    "staff": "Staff",
+    "addStock": "Add Blood Stock",
+    "requestBlood": "Request Blood"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "donors": "Manage Donors",
+    "bloodStock": "Blood Stock",
+    "hospitals": "Hospitals",
+    "analytics": "Analytics",
+    "deliveries": "Deliveries"
+  },
+  "map": {
+    "title": "Find Nearest Donors & Hospitals",
+    "nearbyDonors": "Nearby Donors",
+    "nearbyHospitals": "Nearby Hospitals",
+    "yourLocation": "Your Location",
+    "distance": "Distance",
+    "clickForLocation": "Click to use your location"
+  },
+  "analytics": {
+    "title": "Blood Donation Analytics",
+    "bloodStats": "Blood Group Statistics",
+    "donationTrends": "Donation Trends",
+    "requestStats": "Request Statistics",
+    "hospitalStats": "Hospital Statistics"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark All Read",
+    "noNotifications": "No notifications yet",
+    "unread": "Unread"
+  },
+  "delivery": {
+    "title": "Blood Delivery Records",
+    "status": "Status",
+    "from": "From",
+    "to": "To",
+    "bloodGroup": "Blood Group",
+    "units": "Units",
+    "trackingCode": "Tracking Code",
+    "pending": "Pending",
+    "inTransit": "In Transit",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "loading": "Loading...",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data found",
+    "submit": "Submit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "success": "Success",
+    "error": "Error"
+  }
+}
