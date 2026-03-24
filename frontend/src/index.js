@@ -1,44 +1,44 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
-import ErrorBoundary from './components/ErrorBoundary';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'react-toastify/dist/ReactToastify.css';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import HttpBackend from 'i18next-http-backend';
+import App from './App';
+import './index.css';
 
-// Suppress React DevTools suggestion in production
-if (process.env.NODE_ENV === 'production') {
-  console.log = () => {};
-  console.warn = () => {};
-}
-
-// Display welcome message in console
-if (process.env.NODE_ENV === 'development') {
-  console.log(
-    '%c🩸 DROPLIFE - Smart Blood Donation System',
-    'color: #dc3545; font-size: 24px; font-weight: bold;'
-  );
-  console.log(
-    '%cConnecting Lives, One Drop at a Time',
-    'color: #667eea; font-size: 14px; font-style: italic;'
-  );
-  console.log(
-    '%cVersion: 1.0.0 | Environment: Development',
-    'color: #6c757d; font-size: 12px;'
-  );
-  console.log('');
-}
+// Initialize i18next
+i18n
+  .use(HttpBackend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    fallbackLng: 'en',
+    supportedLngs: [
+      'en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml',
+      'pa', 'as', 'ur', 'mai', 'ne', 'si', 'ar', 'zh', 'fr', 'de',
+      'es', 'pt', 'ru', 'ja', 'ko', 'tr', 'it', 'vi', 'id', 'ms',
+      'th', 'sw', 'fa', 'pl', 'nl', 'sv', 'sat', 'ks'
+    ],
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+      lookupLocalStorage: 'droplife_lang',
+    },
+    backend: {
+      loadPath: '/locales/{{lng}}/translation.json',
+    },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
+      <App />
     </Provider>
   </React.StrictMode>
-  
 );
