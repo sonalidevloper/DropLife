@@ -1,238 +1,283 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FaTint, FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle, FaBell } from 'react-icons/fa';
-import api from '../services/api';
-import { toast } from 'react-toastify';
-import LoadingSpinner from '../components/LoadingSpinner';
-import './Dashboard.css';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './DonorDashboard.css';
 
-const DonorDashboard = () => {
-  const { user } = useSelector((state) => state.auth);
-  const [profile, setProfile] = useState(null);
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [bloodRequests, setBloodRequests] = useState([]);
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const DEMO_HISTORY = [
+  { id: 1, date: 'Nov 15, 2025', hospital: 'AIIMS Delhi',        bloodType: 'O+', units: 1, certificate: true },
+  { id: 2, date: 'Aug 20, 2025', hospital: 'Safdarjung Hospital', bloodType: 'O+', units: 1, certificate: true },
+  { id: 3, date: 'May 5, 2025',  hospital: 'Apollo Hospital',     bloodType: 'O+', units: 1, certificate: true },
+  { id: 4, date: 'Jan 10, 2025', hospital: 'AIIMS Delhi',         bloodType: 'O+', units: 1, certificate: true },
+];
+
+export default function DonorDashboard() {
+  const { user } = useSelector(s => s.auth);
+  const navigate = useNavigate();
+  const [history, setHistory] = useState(DEMO_HISTORY);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState({
+    totalDonations: 4,
+    lastDonation: 'Nov 15, 2025',
+    nextEligible: 'Feb 15, 2026',
+    livesSaved: 12,
+    bloodGroup: user?.bloodGroup || 'O+',
+  });
 
   useEffect(() => {
-    fetchProfile();
-    fetchBloodRequests();
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE}/donors/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data?.data) {
+          const d = res.data.data;
+          setStats({
+            totalDonations: d.donationCount || 4,
+            lastDonation: d.lastDonationDate ? new Date(d.lastDonationDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Nov 15, 2025',
+            nextEligible: d.nextEligibleDate ? new Date(d.nextEligibleDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Feb 15, 2026',
+            livesSaved: (d.donationCount || 4) * 3,
+            bloodGroup: d.bloodGroup || 'O+',
+          });
+        }
+      } catch { /* use demo */ }
+    };
+    fetchData();
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const response = await api.get('/donor/profile');
-      setProfile(response.data.data);
-      setIsAvailable(response.data.data.isAvailable);
-      setLoading(false);
-    } catch (error) {
-      toast.error('Failed to fetch profile');
-      setLoading(false);
-    }
+  // Days until next eligible
+  const daysUntilEligible = () => {
+    const next = new Date(stats.nextEligible);
+    const now = new Date();
+    const diff = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
   };
 
-  const fetchBloodRequests = async () => {
-    try {
-      const response = await api.get('/blood-request?status=Open');
-      setBloodRequests(response.data.data);
-    } catch (error) {
-      console.error('Failed to fetch blood requests');
-    }
-  };
-
-  const handleAvailabilityToggle = async () => {
-    try {
-      const response = await api.put('/donor/availability', {
-        isAvailable: !isAvailable,
-      });
-      setIsAvailable(!isAvailable);
-      toast.success(response.data.message);
-    } catch (error) {
-      toast.error('Failed to update availability');
-    }
-  };
-
-  const handleRespondToRequest = async (requestId, response) => {
-    try {
-      await api.put(`/blood-request/${requestId}/respond`, { response });
-      toast.success(`You have ${response.toLowerCase()} the blood request`);
-      fetchBloodRequests();
-    } catch (error) {
-      toast.error('Failed to respond to request');
-    }
-  };
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  const canDonate = profile?.lastDonationDate
-    ? Math.floor((Date.now() - new Date(profile.lastDonationDate).getTime()) / (1000 * 60 * 60 * 24)) >= 90
-    : true;
+  const TABS = ['overview', 'history', 'requests', 'achievements'];
 
   return (
-    <div className="dashboard-page">
-      <Container className="py-5">
-        <Row>
-          <Col md={12}>
-            <div className="dashboard-header mb-4">
-              <h2 className="fw-bold">
-                Welcome back, {user?.name}! <FaTint className="text-danger" />
-              </h2>
-              <p className="text-muted">Thank you for being a lifesaver</p>
+    <div className="donor-dashboard">
+      {/* ── PROFILE HEADER ────────────────────── */}
+      <div className="donor-profile-header">
+        <div className="donor-bg-effect" />
+        <div className="donor-avatar-section">
+          <div className="donor-avatar">
+            {user?.name?.charAt(0)?.toUpperCase() || 'D'}
+          </div>
+          <div className="donor-info">
+            <h1 className="donor-name">{user?.name || 'Donor'}</h1>
+            <div className="donor-meta">
+              <span className="badge badge-red">🩸 Active Donor</span>
+              <span style={{ color:'var(--text-muted)', fontSize:13 }}>📧 {user?.email}</span>
+              <span style={{ color:'var(--text-muted)', fontSize:13 }}>📍 {user?.city || 'India'}</span>
             </div>
-          </Col>
-        </Row>
+          </div>
+          <div className="donor-blood-badge">
+            <div className="blood-badge animate-glow" style={{ width:64, height:64, fontSize:'1.3rem' }}>
+              {stats.bloodGroup}
+            </div>
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:6, textAlign:'center' }}>Blood Group</div>
+          </div>
+        </div>
+      </div>
 
-        <Row>
-          {/* Profile Card */}
-          <Col md={4} className="mb-4">
-            <Card className="dashboard-card h-100 shadow">
-              <Card.Body>
-                <div className="text-center mb-3">
-                  <div className="profile-avatar mb-3">
-                    <FaTint size={50} className="text-danger" />
+      {/* ── STATS ROW ─────────────────────────── */}
+      <div className="donor-stats-row">
+        {[
+          { icon:'🩸', val:stats.totalDonations, label:'Total Donations', sub:'lifetime' },
+          { icon:'❤️', val:stats.livesSaved,     label:'Lives Saved',     sub:'estimated' },
+          { icon:'📅', val:stats.lastDonation,   label:'Last Donation',   sub:'date' },
+          { icon:'⏳', val:`${daysUntilEligible()} days`, label:'Next Eligible', sub:stats.nextEligible },
+        ].map((s, i) => (
+          <div key={i} className="stat-card">
+            <div className="stat-icon">{s.icon}</div>
+            <div className="stat-value" style={{ fontSize: typeof s.val === 'string' && s.val.length > 5 ? '1.4rem' : '2.4rem' }}>
+              {s.val}
+            </div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-change up">↑ {s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── TABS ──────────────────────────────── */}
+      <div className="donor-tabs">
+        {TABS.map(t => (
+          <button key={t}
+            className={`donor-tab ${activeTab === t ? 'active' : ''}`}
+            onClick={() => setActiveTab(t)}>
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* ── TAB CONTENT ───────────────────────── */}
+      {activeTab === 'overview' && (
+        <div className="donor-tab-content animate-fadeInUp">
+          <div className="grid-2">
+            {/* Donation streak card */}
+            <div className="card">
+              <h3 style={{ marginBottom:20, fontWeight:700 }}>🔥 Donation Streak</h3>
+              <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+                <div style={{ textAlign:'center' }}>
+                  <div style={{ fontFamily:'var(--font-display)', fontSize:'4rem', color:'var(--red-light)', lineHeight:1 }}>
+                    {stats.totalDonations}
                   </div>
-                  <h4 className="fw-bold">{profile?.name}</h4>
-                  <Badge bg="danger" className="mb-2" style={{ fontSize: '1.2rem' }}>
-                    {profile?.bloodGroup}
-                  </Badge>
-                  <p className="text-muted mb-0">{profile?.email}</p>
-                  <p className="text-muted">{profile?.phone}</p>
+                  <div style={{ color:'var(--text-muted)', fontSize:13 }}>donations</div>
                 </div>
-
-                <div className="availability-toggle">
-                  <Form.Check
-                    type="switch"
-                    id="availability-switch"
-                    label={isAvailable ? 'Available to Donate' : 'Not Available'}
-                    checked={isAvailable}
-                    onChange={handleAvailabilityToggle}
-                    className={isAvailable ? 'text-success' : 'text-danger'}
-                  />
-                </div>
-
-                <hr />
-
-                <div className="donor-stats">
-                  <div className="stat-item mb-2">
-                    <FaCalendarAlt className="me-2" />
-                    <strong>Total Donations:</strong> {profile?.donationCount}
-                  </div>
-                  <div className="stat-item mb-2">
-                    <FaMapMarkerAlt className="me-2" />
-                    <strong>Location:</strong> {profile?.address?.city}, {profile?.address?.state}
-                  </div>
-                  {profile?.lastDonationDate && (
-                    <div className="stat-item mb-2">
-                      <FaCheckCircle className="me-2" />
-                      <strong>Last Donation:</strong>{' '}
-                      {new Date(profile.lastDonationDate).toLocaleDateString()}
+                <div style={{ flex:1 }}>
+                  <div style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:6 }}>
+                      <span style={{ color:'var(--text-secondary)' }}>Progress to next badge</span>
+                      <span style={{ color:'var(--red-light)' }}>{stats.totalDonations}/5</span>
                     </div>
-                  )}
-                  <div className={`stat-item ${canDonate ? 'text-success' : 'text-warning'}`}>
-                    <strong>Status:</strong> {canDonate ? 'Eligible to Donate' : 'Wait 90 days'}
+                    <div className="progress-bar-wrap">
+                      <div className="progress-bar-fill red" style={{ width:`${(stats.totalDonations / 5) * 100}%` }} />
+                    </div>
+                  </div>
+                  <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.5 }}>
+                    🏆 1 more donation to unlock <strong style={{ color:'var(--text-primary)' }}>Gold Donor</strong> badge!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick actions */}
+            <div className="card">
+              <h3 style={{ marginBottom:20, fontWeight:700 }}>⚡ Quick Actions</h3>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {[
+                  { icon:'🩸', label:'Schedule Donation', action: () => navigate('/donation-camps') },
+                  { icon:'📋', label:'Request Blood', action: () => navigate('/blood-request') },
+                  { icon:'🔔', label:'SOS Alert Nearby', action: () => navigate('/notifications') },
+                  { icon:'📍', label:'Find Donation Camp', action: () => navigate('/map') },
+                ].map((a, i) => (
+                  <button key={i} className="quick-action-btn" onClick={a.action}>
+                    <span style={{ fontSize:20 }}>{a.icon}</span>
+                    <span>{a.label}</span>
+                    <span style={{ marginLeft:'auto', color:'var(--text-muted)' }}>→</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="donor-tab-content animate-fadeInUp">
+          <div className="table-container">
+            {history.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">🩸</div>
+                <h3>No donations yet</h3>
+                <p>Your donation history will appear here once you donate.</p>
+                <button className="btn-primary" style={{ marginTop:16 }} onClick={() => navigate('/donation-camps')}>
+                  Find a Donation Camp
+                </button>
+              </div>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr><th>#</th><th>Date</th><th>Hospital</th><th>Blood Type</th><th>Units</th><th>Certificate</th></tr>
+                </thead>
+                <tbody>
+                  {history.map((h, i) => (
+                    <tr key={h.id}>
+                      <td style={{ color:'var(--text-muted)', fontSize:12 }}>{i + 1}</td>
+                      <td style={{ color:'var(--text-secondary)' }}>{h.date}</td>
+                      <td><strong>{h.hospital}</strong></td>
+                      <td>
+                        <div className="blood-badge" style={{ width:32, height:32, fontSize:'0.7rem' }}>
+                          {h.bloodType}
+                        </div>
+                      </td>
+                      <td>{h.units}</td>
+                      <td>
+                        {h.certificate ? (
+                          <button className="btn-ghost" style={{ fontSize:'12px', padding:'5px 12px', color:'var(--info)' }}>
+                            📄 Download
+                          </button>
+                        ) : (
+                          <span style={{ color:'var(--text-muted)', fontSize:12 }}>—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'requests' && (
+        <div className="donor-tab-content animate-fadeInUp">
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
+            <div>
+              <h3 style={{ fontWeight:700, marginBottom:4 }}>Active Blood Requests</h3>
+              <p style={{ color:'var(--text-muted)', fontSize:13 }}>Requests matching your blood type near you</p>
+            </div>
+            <button className="btn-primary" onClick={() => navigate('/blood-request')}>+ New Request</button>
+          </div>
+          <div className="requests-list">
+            {[
+              { type:'O+', hospital:'AIIMS Delhi',     urgency:'Urgent',    time:'10 min ago', distance:'3.2 km' },
+              { type:'O+', hospital:'Max Hospital',    urgency:'Normal',    time:'30 min ago', distance:'5.8 km' },
+              { type:'O-', hospital:'Apollo Hospital', urgency:'Emergency', time:'5 min ago',  distance:'7.1 km' },
+            ].map((r, i) => (
+              <div key={i} className="request-card">
+                <div className="blood-badge" style={{ width:44, height:44, fontSize:'0.9rem' }}>{r.type}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:700, fontSize:14 }}>{r.hospital}</div>
+                  <div style={{ color:'var(--text-muted)', fontSize:12, marginTop:2 }}>
+                    📍 {r.distance} away · {r.time}
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
+                <div style={{ display:'flex', flexDirection:'column', gap:6, alignItems:'flex-end' }}>
+                  <span className={`badge ${r.urgency==='Emergency'?'badge-danger':r.urgency==='Urgent'?'badge-warning':'badge-info'}`}>
+                    {r.urgency}
+                  </span>
+                  <button className="btn-primary" style={{ fontSize:'12px', padding:'6px 14px' }}>
+                    Respond
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-          {/* Blood Requests */}
-          <Col md={8} className="mb-4">
-            <Card className="dashboard-card shadow">
-              <Card.Header className="bg-danger text-white">
-                <h5 className="mb-0">
-                  <FaBell className="me-2" />
-                  Active Blood Requests Nearby
-                </h5>
-              </Card.Header>
-              <Card.Body style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                {bloodRequests.length === 0 ? (
-                  <p className="text-center text-muted">No active blood requests at the moment</p>
+      {activeTab === 'achievements' && (
+        <div className="donor-tab-content animate-fadeInUp">
+          <div className="achievements-grid">
+            {[
+              { icon:'🩸', name:'First Drop',    desc:'Made your first donation', earned:true },
+              { icon:'⭐', name:'Regular Donor', desc:'3+ donations completed',   earned:true },
+              { icon:'🔥', name:'Streak Hero',   desc:'Donated 3 times in a year', earned:true },
+              { icon:'🏆', name:'Gold Donor',    desc:'5+ lifetime donations',    earned:false },
+              { icon:'💎', name:'Diamond Donor', desc:'10+ lifetime donations',   earned:false },
+              { icon:'🦸', name:'Life Saver',    desc:'Saved 10+ lives estimated', earned:false },
+            ].map((a, i) => (
+              <div key={i} className={`achievement-card ${a.earned ? 'earned' : 'locked'}`}>
+                <div className="achievement-icon">{a.icon}</div>
+                <div className="achievement-name">{a.name}</div>
+                <div className="achievement-desc">{a.desc}</div>
+                {a.earned ? (
+                  <span className="badge badge-success">Earned ✓</span>
                 ) : (
-                  bloodRequests.map((request) => (
-                    <Card key={request._id} className="mb-3 border-start border-danger border-4">
-                      <Card.Body>
-                        <Row className="align-items-center">
-                          <Col md={8}>
-                            <h5 className="fw-bold">{request.patientName}</h5>
-                            <p className="mb-1">
-                              <Badge bg="danger">{request.bloodGroup}</Badge>{' '}
-                              <Badge bg={request.urgency === 'Critical' ? 'danger' : 'warning'}>
-                                {request.urgency}
-                              </Badge>
-                            </p>
-                            <p className="mb-1">
-                              <strong>Units Required:</strong> {request.unitsRequired}
-                            </p>
-                            <p className="mb-1">
-                              <strong>Hospital:</strong> {request.hospital.name}
-                            </p>
-                            <p className="mb-1 text-muted">
-                              <FaMapMarkerAlt className="me-1" />
-                              {request.hospital.address}
-                            </p>
-                            <p className="mb-0 text-muted">
-                              <strong>Contact:</strong> {request.requesterName} - {request.requesterPhone}
-                            </p>
-                          </Col>
-                          <Col md={4} className="text-end">
-                            <Button
-                              variant="success"
-                              className="me-2 mb-2"
-                              onClick={() => handleRespondToRequest(request._id, 'Accepted')}
-                              disabled={!canDonate}
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              variant="outline-secondary"
-                              onClick={() => handleRespondToRequest(request._id, 'Declined')}
-                            >
-                              Decline
-                            </Button>
-                          </Col>
-                        </Row>
-                      </Card.Body>
-                    </Card>
-                  ))
+                  <span className="badge" style={{ background:'rgba(255,255,255,0.05)', color:'var(--text-muted)', border:'1px solid var(--border)' }}>
+                    🔒 Locked
+                  </span>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Quick Stats */}
-        <Row>
-          <Col md={3} className="mb-3">
-            <Card className="stat-card bg-primary text-white text-center p-3">
-              <h3>{profile?.donationCount}</h3>
-              <p className="mb-0">Total Donations</p>
-            </Card>
-          </Col>
-          <Col md={3} className="mb-3">
-            <Card className="stat-card bg-success text-white text-center p-3">
-              <h3>{profile?.donationCount * 3}</h3>
-              <p className="mb-0">Lives Saved</p>
-            </Card>
-          </Col>
-          <Col md={3} className="mb-3">
-            <Card className="stat-card bg-warning text-white text-center p-3">
-              <h3>{bloodRequests.length}</h3>
-              <p className="mb-0">Active Requests</p>
-            </Card>
-          </Col>
-          <Col md={3} className="mb-3">
-            <Card className="stat-card bg-danger text-white text-center p-3">
-              <h3>{profile?.bloodGroup}</h3>
-              <p className="mb-0">Blood Group</p>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default DonorDashboard;
+}
