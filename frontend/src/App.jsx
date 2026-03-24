@@ -1,248 +1,175 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
 import { useSelector } from 'react-redux';
-import './App.css';
-
-// Public Pages
-import Welcome from './pages/Welcome';
-import Home from './pages/Home';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Privacy from './pages/Privacy';
-import Helpline from './pages/Helpline';
-
-// Donor Pages
-import DonorDashboard from './pages/DonorDashboard';
-
-// Hospital Pages
-import HospitalSignup from './pages/HospitalSignup';
-import HospitalDashboard from './pages/HospitalDashboard';
-import HospitalDetail from './pages/HospitalDetail';
-import HospitalPatients from './pages/HospitalPatients';
-import HospitalBloodBank from './pages/HospitalBloodBank';
-import HospitalsPublic from './pages/HospitalsPublic';
-
-// Shared Pages
-import BloodRequest from './pages/BloodRequest';
-import BloodAvailability from './pages/BloodAvailability';
-import DonationCamps from './pages/DonationCamps';
-import MapView from './pages/MapView';
-import Analytics from './pages/Analytics';
-
-// Admin Pages
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import DonorList from './pages/DonorList';
-import BloodStockManagement from './pages/BloodStockManagement';
-
-// User Pages
-import UserDashboard from './pages/UserDashboard';
-
-// Auth Pages
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-
-// Components
-import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import NotFound from './pages/NotFound';
+import LoadingSpinner from './components/LoadingSpinner';
 
-// Protected Home component - only for logged in users
-const ProtectedHome = () => {
-  const { token } = useSelector((state) => state.auth);
-  
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <Home />;
-};
+// Lazy-loaded pages
+const Welcome           = lazy(() => import('./pages/Welcome'));
+const Home              = lazy(() => import('./pages/Home'));
+const Login             = lazy(() => import('./pages/Login'));
+const Signup            = lazy(() => import('./pages/Signup'));
+const ForgotPassword    = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword     = lazy(() => import('./pages/ResetPassword'));
 
-function App() {
+const DonorDashboard    = lazy(() => import('./pages/DonorDashboard'));
+const UserDashboard     = lazy(() => import('./pages/UserDashboard'));
+
+const HospitalLogin     = lazy(() => import('./pages/HospitalLogin'));
+const HospitalSignup    = lazy(() => import('./pages/HospitalSignup'));
+const HospitalDashboard = lazy(() => import('./pages/HospitalDashboard'));
+const HospitalBloodBank = lazy(() => import('./pages/HospitalBloodBank'));
+const HospitalDeliveries= lazy(() => import('./pages/HospitalDeliveries'));
+const HospitalRequests  = lazy(() => import('./pages/HospitalRequests'));
+const HospitalPatients  = lazy(() => import('./pages/HospitalPatients'));
+const HospitalStaff     = lazy(() => import('./pages/HospitalStaff'));
+
+const AdminDashboard    = lazy(() => import('./pages/AdminDashboard'));
+const DeliveryRecords   = lazy(() => import('./pages/DeliveryRecords'));
+
+const BloodRequest      = lazy(() => import('./pages/BloodRequest'));
+const BloodAvailability = lazy(() => import('./pages/BloodAvailability'));
+const DonationCamps     = lazy(() => import('./pages/DonationCamps'));
+const DonorList         = lazy(() => import('./pages/DonorList'));
+const BloodStockManagement = lazy(() => import('./pages/BloodStockManagement'));
+const HospitalsPublic   = lazy(() => import('./pages/HospitalsPublic'));
+const MapView           = lazy(() => import('./pages/MapView'));
+const Analytics         = lazy(() => import('./pages/Analytics'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+
+const About             = lazy(() => import('./pages/About'));
+const Contact           = lazy(() => import('./pages/Contact'));
+const Privacy           = lazy(() => import('./pages/Privacy'));
+const Helpline          = lazy(() => import('./pages/Helpline'));
+
+// ── Protected route wrappers ─────────────────────────────────────────
+function ProtectedRoute({ children, roles }) {
+  const { user, token } = useSelector(s => s.auth);
+  if (!token) return <Navigate to="/login" replace />;
+  if (roles && !roles.includes(user?.role)) return <Navigate to="/home" replace />;
+  return children;
+}
+
+function PublicOnlyRoute({ children }) {
+  const { token } = useSelector(s => s.auth);
+  if (token) return <Navigate to="/home" replace />;
+  return children;
+}
+
+export default function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <div className="App">
-        <Navbar />
+    <Router>
+      <Navbar />
+      <Suspense fallback={
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'70vh' }}>
+          <div style={{ textAlign:'center' }}>
+            <div className="spinner" />
+            <p style={{ color:'var(--text-muted)', marginTop:12, fontSize:14 }}>Loading...</p>
+          </div>
+        </div>
+      }>
         <Routes>
-          {/* Welcome Page - Always accessible */}
-          <Route path="/" element={<Welcome />} />
-          
-          {/* Public Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          
-          {/* Admin Auth */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          
-          {/* Hospital Auth */}
-          <Route path="/hospital/signup" element={<HospitalSignup />} />
-          
-          {/* Protected Home - Requires login */}
-          <Route path="/home" element={<ProtectedHome />} />
-          
-          {/* Public Info Pages - Accessible without login */}
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/helpline" element={<Helpline />} />
-          
-          {/* Protected Public Features - Requires login */}
-          <Route
-            path="/blood-request"
-            element={
-              <ProtectedRoute>
-                <BloodRequest />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/blood-availability"
-            element={
-              <ProtectedRoute>
-                <BloodAvailability />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/camps"
-            element={
-              <ProtectedRoute>
-                <DonationCamps />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/map"
-            element={
-              <ProtectedRoute>
-                <MapView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hospitals"
-            element={
-              <ProtectedRoute>
-                <HospitalsPublic />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hospitals/:id"
-            element={
-              <ProtectedRoute>
-                <HospitalDetail />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Donor Protected Routes */}
-          <Route
-            path="/donor/dashboard"
-            element={
-              <ProtectedRoute role="donor">
-                <DonorDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* User Protected Routes */}
-          <Route
-            path="/user/dashboard"
-            element={
-              <ProtectedRoute role="user">
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Hospital Protected Routes */}
-          <Route
-            path="/hospital/dashboard"
-            element={
-              <ProtectedRoute role="hospital">
-                <HospitalDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hospital/blood-bank"
-            element={
-              <ProtectedRoute role="hospital">
-                <HospitalBloodBank />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hospital/patients"
-            element={
-              <ProtectedRoute role="hospital">
-                <HospitalPatients />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Admin Protected Routes */}
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute role="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/donors"
-            element={
-              <ProtectedRoute role="admin">
-                <DonorList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/blood-stock"
-            element={
-              <ProtectedRoute role="admin">
-                <BloodStockManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/analytics"
-            element={
-              <ProtectedRoute role="admin">
-                <Analytics />
-              </ProtectedRoute>
-            }
-          />
+          {/* ── Public routes ─────────────────────────────────────── */}
+          <Route path="/"                  element={<Welcome />} />
+          <Route path="/home"              element={<Home />} />
+          <Route path="/blood-availability"element={<BloodAvailability />} />
+          <Route path="/donation-camps"    element={<DonationCamps />} />
+          <Route path="/hospitals-public"  element={<HospitalsPublic />} />
+          <Route path="/map"               element={<MapView />} />
+          <Route path="/donor-list"        element={<DonorList />} />
+          <Route path="/about"             element={<About />} />
+          <Route path="/contact"           element={<Contact />} />
+          <Route path="/privacy"           element={<Privacy />} />
+          <Route path="/helpline"          element={<Helpline />} />
 
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
+          {/* ── Auth routes (public only) ──────────────────────────── */}
+          <Route path="/login"  element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+          <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
+          <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+          <Route path="/reset-password/:token" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
+          <Route path="/hospital-login"  element={<PublicOnlyRoute><HospitalLogin /></PublicOnlyRoute>} />
+          <Route path="/hospital-signup" element={<PublicOnlyRoute><HospitalSignup /></PublicOnlyRoute>} />
+
+          {/* ── Donor/User routes ─────────────────────────────────── */}
+          <Route path="/donor-dashboard" element={
+            <ProtectedRoute roles={['donor']}>
+              <DonorDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/user-dashboard" element={
+            <ProtectedRoute roles={['user','donor']}>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/blood-request" element={
+            <ProtectedRoute>
+              <BloodRequest />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Hospital routes ───────────────────────────────────── */}
+          <Route path="/hospital-dashboard" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/hospital-blood-bank" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalBloodBank />
+            </ProtectedRoute>
+          } />
+          <Route path="/hospital-deliveries" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalDeliveries />
+            </ProtectedRoute>
+          } />
+          <Route path="/hospital-requests" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalRequests />
+            </ProtectedRoute>
+          } />
+          <Route path="/hospital-patients" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalPatients />
+            </ProtectedRoute>
+          } />
+          <Route path="/hospital-staff" element={
+            <ProtectedRoute roles={['hospital']}>
+              <HospitalStaff />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Admin routes ──────────────────────────────────────── */}
+          <Route path="/admin-dashboard" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/blood-stock-management" element={
+            <ProtectedRoute roles={['admin','hospital']}>
+              <BloodStockManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/delivery-records" element={
+            <ProtectedRoute roles={['admin','hospital']}>
+              <DeliveryRecords />
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute roles={['admin','hospital']}>
+              <Analytics />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Catch-all ─────────────────────────────────────────── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <Footer />
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
-      </div>
+      </Suspense>
     </Router>
   );
 }
-
-export default App;
