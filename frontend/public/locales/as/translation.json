@@ -1,6 +1,0 @@
-{
-  "nav": { "home": "মূল পৃষ্ঠা", "bloodRequest": "তেজৰ অনুৰোধ", "bloodAvailability": "তেজৰ উপলব্ধতা", "camps": "দান শিবিৰ", "about": "আমাৰ বিষয়ে", "contact": "যোগাযোগ", "map": "দাতা বিচাৰক", "analytics": "বিশ্লেষণ", "notifications": "জাননী", "login": "লগইন", "register": "নিবন্ধন", "logout": "লগআউট", "dashboard": "ডেছবোৰ্ড", "hospitals": "চিকিৎসালয়" },
-  "home": { "title": "জীৱন ৰক্ষা কৰক, তেজ দান কৰক", "subtitle": "দাতাসকলক প্ৰয়োজনীয় ৰোগীৰ সৈতে সংযোগ কৰক" },
-  "auth": { "login": "লগইন", "register": "নিবন্ধন", "email": "ইমেইল", "password": "পাছৱৰ্ড", "name": "সম্পূৰ্ণ নাম", "signIn": "চাইন ইন", "signUp": "চাইন আপ" },
-  "common": { "save": "সংৰক্ষণ কৰক", "cancel": "বাতিল কৰক", "loading": "লোড হৈছে...", "search": "সন্ধান কৰক", "submit": "জমা দিয়ক", "close": "বন্ধ কৰক", "error": "ত্ৰুটি", "success": "সফল" }
-}
