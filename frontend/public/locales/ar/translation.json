@@ -1,6 +1,0 @@
-{
-  "nav": { "home": "الرئيسية", "bloodRequest": "طلب دم", "bloodAvailability": "توافر الدم", "camps": "معسكرات التبرع", "about": "من نحن", "contact": "اتصل بنا", "map": "ابحث عن متبرع", "analytics": "التحليلات", "notifications": "الإشعارات", "login": "تسجيل الدخول", "register": "التسجيل", "logout": "تسجيل الخروج", "dashboard": "لوحة التحكم", "hospitals": "المستشفيات" },
-  "home": { "title": "أنقذ الأرواح، تبرع بالدم", "subtitle": "ربط المتبرعين بالمرضى المحتاجين" },
-  "auth": { "login": "تسجيل الدخول", "register": "التسجيل", "email": "البريد الإلكتروني", "password": "كلمة المرور", "name": "الاسم الكامل", "signIn": "دخول", "signUp": "تسجيل" },
-  "common": { "save": "حفظ", "cancel": "إلغاء", "loading": "جار التحميل...", "search": "بحث", "submit": "إرسال", "close": "إغلاق", "error": "خطأ", "success": "نجاح", "delete": "حذف", "edit": "تعديل" }
-}
