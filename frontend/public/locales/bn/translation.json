@@ -1,6 +1,0 @@
-{
-  "nav": { "home": "হোম", "bloodRequest": "রক্তের অনুরোধ", "bloodAvailability": "রক্তের উপলব্ধতা", "camps": "দান শিবির", "about": "আমাদের সম্পর্কে", "contact": "যোগাযোগ", "map": "দাতা খুঁজুন", "analytics": "বিশ্লেষণ", "notifications": "বিজ্ঞপ্তি", "login": "লগইন", "register": "নিবন্ধন", "logout": "লগআউট", "dashboard": "ড্যাশবোর্ড", "hospitals": "হাসপাতাল" },
-  "home": { "title": "জীবন বাঁচান, রক্ত দান করুন", "subtitle": "দাতাদের প্রয়োজনগ্রস্ত রোগীদের সাথে সংযুক্ত করুন", "findDonor": "একজন দাতা খুঁজুন", "becomeDonor": "দাতা হোন" },
-  "auth": { "login": "লগইন", "register": "নিবন্ধন", "email": "ইমেইল", "password": "পাসওয়ার্ড", "name": "পূর্ণ নাম", "signIn": "সাইন ইন", "signUp": "সাইন আপ" },
-  "common": { "save": "সংরক্ষণ করুন", "cancel": "বাতিল করুন", "loading": "লোড হচ্ছে...", "search": "খোঁজ করুন", "submit": "জমা দিন", "close": "বন্ধ করুন", "error": "ত্রুটি", "success": "সফল" }
-}
