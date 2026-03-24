@@ -1,10 +1,100 @@
 {
-  "welcome": "Welcome to DROPLIFE",
-  "home": "Home",
-  "about": "About",
-  "contact": "Contact",
-  "login": "Login",
-  "register": "Register",
-  "donate": "Donate Blood",
-  "request": "Request Blood"
+  "nav": {
+    "home": "Home",
+    "blood": "Find Blood",
+    "camps": "Camps",
+    "hospitals": "Hospitals",
+    "map": "Live Map",
+    "about": "About",
+    "login": "Sign In",
+    "signup": "Register"
+  },
+  "hero": {
+    "badge": "Live — blood requests right now",
+    "title1": "EVERY DROP",
+    "title2": "SAVES A",
+    "title3": "LIFE",
+    "subtitle": "India's most advanced blood donation platform. Connect donors, hospitals, and patients in real-time.",
+    "cta_donate": "Become a Donor",
+    "cta_find": "Find Blood Now"
+  },
+  "stats": {
+    "lives": "Lives Saved",
+    "donors": "Active Donors",
+    "hospitals": "Partner Hospitals",
+    "rate": "Match Rate"
+  },
+  "blood": {
+    "title": "Blood Availability",
+    "subtitle": "Real-time blood stock across India",
+    "search": "Search hospital, city or blood type...",
+    "filter_type": "Blood Type",
+    "filter_city": "City",
+    "filter_status": "Status",
+    "all": "All",
+    "available": "Available",
+    "low": "Low Stock",
+    "critical": "Critical",
+    "unavailable": "Unavailable",
+    "units": "units",
+    "request": "Request",
+    "call": "Call",
+    "refresh": "Refresh"
+  },
+  "hospitals": {
+    "title": "Find Hospitals",
+    "search": "Search hospital name, city, state or speciality...",
+    "blood_bank_only": "Blood Bank Only",
+    "urgent_only": "Urgent Need",
+    "beds": "Beds",
+    "est": "Est.",
+    "donors": "Donors",
+    "call": "Call",
+    "view_map": "View on Map",
+    "request_blood": "Request Blood Here"
+  },
+  "map": {
+    "title": "Live Donor Map",
+    "subtitle": "Find nearby donors, hospitals and donation camps",
+    "layers": "Map Layers",
+    "hospitals": "Hospitals",
+    "donors": "Donors",
+    "camps": "Donation Camps",
+    "filter_blood": "Filter Donors by Blood",
+    "nearby_hospitals": "Nearby Hospitals",
+    "my_location": "My Location"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "clear_filters": "Clear All",
+    "no_results": "No results found",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "close": "Close",
+    "search": "Search",
+    "view_all": "View All",
+    "back": "Back"
+  },
+  "auth": {
+    "login": "Sign In",
+    "signup": "Create Account",
+    "logout": "Sign Out",
+    "email": "Email Address",
+    "password": "Password",
+    "name": "Full Name",
+    "forgot_password": "Forgot Password?",
+    "reset_password": "Reset Password",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "total_donations": "Total Donations",
+    "last_donation": "Last Donation",
+    "next_eligible": "Next Eligible",
+    "blood_group": "Blood Group"
+  }
 }
