@@ -17,10 +17,10 @@ i18n
   .init({
     fallbackLng: 'en',
     supportedLngs: [
-      'en', 'hi', 'or', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml',
-      'pa', 'as', 'ur', 'mai', 'ne', 'si', 'ar', 'zh', 'fr', 'de',
-      'es', 'pt', 'ru', 'ja', 'ko', 'tr', 'it', 'vi', 'id', 'ms',
-      'th', 'sw', 'fa', 'pl', 'nl', 'sv', 'sat', 'ks'
+      'en','hi','or','bn','te','mr','ta','gu','kn','ml',
+      'pa','as','ur','mai','ne','si','ar','zh','fr','de',
+      'es','pt','ru','ja','ko','tr','it','vi','id','ms',
+      'th','sw','fa','pl','nl','sv','sat','ks'
     ],
     detection: {
       order: ['localStorage', 'navigator'],
@@ -35,10 +35,11 @@ i18n
   });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// NOTE: StrictMode intentionally removed — it causes Leaflet map
+// to double-initialize and crash with "Map container already initialized".
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </React.StrictMode>
+  <Provider store={store}>
+    <App />
+  </Provider>
 );
