@@ -1,278 +1,386 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { useTranslation } from 'react-i18next';
-import { logout } from '../redux/authSlice';
-import NotificationBell from './NotificationBell';
-import LanguageSelector from './LanguageSelector';
-import './Navbar.css';
-
-const BloodDropIcon = () => (
-  <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
-    <defs>
-      <linearGradient id="navDropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#ff6b6b" />
-        <stop offset="100%" stopColor="#c8102e" />
-      </linearGradient>
-    </defs>
-    <path d="M24 4C24 4 8 18 8 28C8 36.837 15.163 44 24 44C32.837 44 40 36.837 40 28C40 18 24 4 24 4Z"
-      fill="url(#navDropGrad)" />
-    <path d="M18 30C18 30 16 26 20 24" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/authSlice";
+import LanguageSelector from "./LanguageSelector";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
-  const { t, i18n } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  const { user, token } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceText, setVoiceText] = useState('');
-  const [voiceError, setVoiceError] = useState('');
-  const recognitionRef = useRef(null);
-  const userMenuRef = useRef(null);
-
-  // Close user menu on outside click
   useEffect(() => {
-    const handleClick = e => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Voice search setup
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = true;
-      rec.lang = i18n.language === 'hi' ? 'hi-IN' : 'en-IN';
+    setMenuOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
 
-      rec.onresult = (e) => {
-        const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
-        setVoiceText(transcript);
-        if (e.results[e.results.length - 1].isFinal) {
-          handleVoiceCommand(transcript.toLowerCase());
-        }
-      };
-      rec.onend = () => setIsListening(false);
-      rec.onerror = (e) => {
-        setVoiceError('Voice not available');
-        setIsListening(false);
-        setTimeout(() => setVoiceError(''), 3000);
-      };
-      recognitionRef.current = rec;
-    }
-  }, [i18n.language]);
-
-  const handleVoiceCommand = (cmd) => {
-    setVoiceText('');
-    if (cmd.includes('blood') || cmd.includes('रक्त')) navigate('/blood-availability');
-    else if (cmd.includes('hospital') || cmd.includes('अस्पताल')) navigate('/hospitals-public');
-    else if (cmd.includes('camp') || cmd.includes('कैंप')) navigate('/donation-camps');
-    else if (cmd.includes('map') || cmd.includes('नक्शा')) navigate('/map');
-    else if (cmd.includes('home') || cmd.includes('घर')) navigate('/home');
-    else if (cmd.includes('dashboard')) navigate('/donor-dashboard');
-    else if (cmd.includes('request')) navigate('/blood-request');
-  };
-
-  const startVoice = () => {
-    if (!recognitionRef.current) {
-      setVoiceError('Voice not supported');
-      setTimeout(() => setVoiceError(''), 2000);
-      return;
-    }
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      setVoiceText('');
-      setVoiceError('');
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  };
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/');
+    navigate("/");
+    setProfileOpen(false);
   };
 
-  // Don't show navbar on welcome page
-  if (location.pathname === '/') return null;
+  const getDashboardLink = () => {
+    if (!user) return null;
+    const roleMap = {
+      admin: "/admin/dashboard",
+      donor: "/donor/dashboard",
+      hospital: "/hospital/dashboard",
+      user: "/user/dashboard",
+    };
+    return roleMap[user.role] || "/donor/dashboard";
+  };
 
-  const navLinks = [
-    { to: '/home', label: t('nav.home', 'Home'), icon: '🏠' },
-    { to: '/blood-availability', label: t('nav.blood', 'Blood'), icon: '🩸' },
-    { to: '/donation-camps', label: t('nav.camps', 'Camps'), icon: '⛺' },
-    { to: '/hospitals-public', label: t('nav.hospitals', 'Hospitals'), icon: '🏥' },
-    { to: '/map', label: t('nav.map', 'Map'), icon: '📍' },
+  const NAV_LINKS = [
+    { to: "/", label: "Home", icon: "🏠" },
+    { to: "/hospitals", label: "Hospitals", icon: "🏥" },
+    { to: "/blood-availability", label: "Blood Stock", icon: "🩸" },
+    { to: "/donation-camps", label: "Camps", icon: "⛺" },
+    { to: "/map", label: "Map", icon: "🗺️" },
+    { to: "/blood-request", label: "Request Blood", icon: "📋", highlight: true },
   ];
 
+  const isActive = (to) => location.pathname === to;
+
+  const s = {
+    nav: {
+      position: "sticky",
+      top: 0,
+      zIndex: 8000,
+      background: scrolled
+        ? "rgba(10, 10, 30, 0.97)"
+        : "linear-gradient(135deg, rgba(139, 0, 0, 0.97), rgba(60, 0, 0, 0.97))",
+      backdropFilter: "blur(20px)",
+      borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none",
+      boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.4)" : "none",
+      transition: "all 0.3s ease",
+      fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+    },
+    inner: {
+      maxWidth: 1300,
+      margin: "0 auto",
+      padding: "0 1.5rem",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: 64,
+      gap: "1rem",
+    },
+    logo: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      textDecoration: "none",
+      color: "#fff",
+      fontWeight: 900,
+      fontSize: "1.3rem",
+      letterSpacing: "-0.02em",
+    },
+    logoIcon: {
+      fontSize: "1.6rem",
+      animation: "heartbeat 2s ease-in-out infinite",
+    },
+    logoDrop: { color: "#f87171" },
+    links: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.25rem",
+      flex: 1,
+      justifyContent: "center",
+    },
+    link: (active, highlight) => ({
+      padding: "0.5rem 0.85rem",
+      borderRadius: "10px",
+      textDecoration: "none",
+      color: active ? "#fff" : highlight ? "#fca5a5" : "rgba(255,255,255,0.75)",
+      fontWeight: active || highlight ? 700 : 500,
+      fontSize: "0.88rem",
+      background: active
+        ? "rgba(255,255,255,0.15)"
+        : highlight
+        ? "rgba(220,38,38,0.3)"
+        : "transparent",
+      border: highlight ? "1px solid rgba(220,38,38,0.5)" : "none",
+      transition: "all 0.2s",
+      whiteSpace: "nowrap",
+    }),
+    rightSection: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.6rem",
+    },
+    profileBtn: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      background: "rgba(255,255,255,0.12)",
+      border: "1px solid rgba(255,255,255,0.2)",
+      borderRadius: "10px",
+      padding: "0.45rem 0.9rem",
+      color: "#fff",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: "0.85rem",
+      fontFamily: "inherit",
+    },
+    profileAvatar: {
+      width: 28,
+      height: 28,
+      borderRadius: "50%",
+      background: "linear-gradient(135deg, #dc2626, #7f1d1d)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 800,
+      fontSize: "0.85rem",
+    },
+    dropdown: {
+      position: "absolute",
+      top: "calc(100% + 8px)",
+      right: 0,
+      width: 220,
+      background: "#1a1a2e",
+      border: "1px solid rgba(255,255,255,0.1)",
+      borderRadius: "16px",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+      overflow: "hidden",
+      zIndex: 9000,
+    },
+    dropHeader: {
+      padding: "1rem",
+      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      background: "rgba(255,255,255,0.04)",
+    },
+    dropName: { fontWeight: 700, fontSize: "0.95rem", color: "#fff" },
+    dropEmail: { fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginTop: "2px" },
+    dropRole: { display: "inline-block", background: "rgba(220,38,38,0.2)", color: "#f87171", borderRadius: "6px", padding: "1px 8px", fontSize: "0.7rem", fontWeight: 700, marginTop: "4px", textTransform: "capitalize" },
+    dropItem: {
+      display: "block",
+      padding: "0.7rem 1rem",
+      color: "rgba(255,255,255,0.8)",
+      textDecoration: "none",
+      fontSize: "0.88rem",
+      transition: "background 0.15s",
+      cursor: "pointer",
+      border: "none",
+      background: "transparent",
+      width: "100%",
+      textAlign: "left",
+      fontFamily: "inherit",
+    },
+    logoutBtn: {
+      display: "block",
+      width: "100%",
+      textAlign: "left",
+      padding: "0.7rem 1rem",
+      color: "#f87171",
+      background: "transparent",
+      border: "none",
+      borderTop: "1px solid rgba(255,255,255,0.08)",
+      fontSize: "0.88rem",
+      cursor: "pointer",
+      fontFamily: "inherit",
+    },
+    authBtns: {
+      display: "flex",
+      gap: "0.5rem",
+    },
+    loginBtn: {
+      padding: "0.5rem 1rem",
+      background: "rgba(255,255,255,0.1)",
+      border: "1px solid rgba(255,255,255,0.2)",
+      borderRadius: "10px",
+      color: "#fff",
+      textDecoration: "none",
+      fontWeight: 600,
+      fontSize: "0.85rem",
+    },
+    signupBtn: {
+      padding: "0.5rem 1rem",
+      background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+      border: "none",
+      borderRadius: "10px",
+      color: "#fff",
+      textDecoration: "none",
+      fontWeight: 700,
+      fontSize: "0.85rem",
+    },
+    hamburger: {
+      display: "none",
+      background: "none",
+      border: "none",
+      color: "#fff",
+      fontSize: "1.5rem",
+      cursor: "pointer",
+      padding: "0.3rem",
+    },
+    mobileMenu: {
+      background: "rgba(10, 10, 30, 0.99)",
+      borderTop: "1px solid rgba(255,255,255,0.06)",
+      padding: "1rem",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.5rem",
+    },
+    mobileLink: (active) => ({
+      display: "flex",
+      alignItems: "center",
+      gap: "0.75rem",
+      padding: "0.8rem 1rem",
+      borderRadius: "12px",
+      textDecoration: "none",
+      color: active ? "#fff" : "rgba(255,255,255,0.75)",
+      background: active ? "rgba(255,255,255,0.1)" : "transparent",
+      fontWeight: active ? 700 : 500,
+      fontSize: "0.95rem",
+      transition: "all 0.15s",
+    }),
+  };
+
   return (
-    <>
-      <nav className="main-navbar">
-        {/* Brand */}
-        <Link to="/" className="navbar-brand">
-          <BloodDropIcon />
-          <span>DropLife</span>
+    <nav style={s.nav}>
+      <style>{`
+        @keyframes heartbeat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        @media (max-width: 900px) {
+          .nav-links { display: none !important; }
+          .hamburger { display: block !important; }
+          .right-section { gap: 0.4rem !important; }
+          .lang-label { display: none !important; }
+        }
+      `}</style>
+
+      <div style={s.inner}>
+        {/* Logo */}
+        <Link to="/" style={s.logo}>
+          <span style={s.logoIcon}>🩸</span>
+          <span><span style={s.logoDrop}>Drop</span>Life</span>
         </Link>
 
-        {/* Desktop nav links */}
-        <div className="navbar-links">
-          {navLinks.map(l => (
-            <Link key={l.to} to={l.to}
-              className={`nav-link ${location.pathname === l.to ? 'active' : ''}`}>
-              {l.label}
+        {/* Nav Links */}
+        <div className="nav-links" style={s.links}>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              style={s.link(isActive(link.to), link.highlight)}
+              onMouseEnter={(e) => { if (!isActive(link.to)) e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+              onMouseLeave={(e) => { if (!isActive(link.to) && !link.highlight) e.currentTarget.style.background = "transparent"; else if (link.highlight && !isActive(link.to)) e.currentTarget.style.background = "rgba(220,38,38,0.3)"; }}
+            >
+              {link.label}
             </Link>
           ))}
         </div>
 
-        {/* Right section */}
-        <div className="navbar-right">
-          {/* Voice search button */}
-          <div className="voice-search-wrap">
-            <button
-              className={`voice-nav-btn ${isListening ? 'listening' : ''}`}
-              onClick={startVoice}
-              title="Voice Search"
-            >
-              {isListening ? '🔴' : '🎤'}
-            </button>
-            {voiceText && (
-              <div className="voice-feedback">
-                <span className="voice-pulse" />
-                "{voiceText}"
-              </div>
-            )}
-            {voiceError && <div className="voice-error">{voiceError}</div>}
-          </div>
-
-          {/* Language selector */}
+        {/* Right Section */}
+        <div className="right-section" style={s.rightSection}>
           <LanguageSelector compact />
+          {user && <NotificationBell />}
 
-          {/* Notification bell (if logged in) */}
-          {token && <NotificationBell />}
-
-          {/* Auth section */}
-          {token && user ? (
-            <div className="user-menu-wrap" ref={userMenuRef}>
-              <button className="user-avatar-btn" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                <div className="avatar-circle">
-                  {user.name ? user.name.charAt(0).toUpperCase() : '?'}
-                </div>
-                <span className="user-name-text">{user.name?.split(' ')[0]}</span>
-                <span className={`chevron ${userMenuOpen ? 'up' : ''}`}>▾</span>
+          {user ? (
+            <div ref={profileRef} style={{ position: "relative" }}>
+              <button style={s.profileBtn} onClick={() => setProfileOpen(!profileOpen)}>
+                <div style={s.profileAvatar}>{user.name?.[0]?.toUpperCase() || "U"}</div>
+                <span className="lang-label">{user.name?.split(" ")[0]}</span>
+                <span style={{ fontSize: "0.7rem", opacity: 0.7 }}>{profileOpen ? "▲" : "▼"}</span>
               </button>
-
-              {userMenuOpen && (
-                <div className="user-dropdown">
-                  <div className="dropdown-header">
-                    <div className="dh-avatar">
-                      {user.name ? user.name.charAt(0).toUpperCase() : '?'}
-                    </div>
-                    <div>
-                      <div className="dh-name">{user.name}</div>
-                      <div className="dh-email">{user.email}</div>
-                      <span className={`badge badge-${user.role === 'admin' ? 'danger' : user.role === 'hospital' ? 'info' : 'red'}`}>
-                        {user.role}
-                      </span>
-                    </div>
+              {profileOpen && (
+                <div style={s.dropdown}>
+                  <div style={s.dropHeader}>
+                    <div style={s.dropName}>{user.name}</div>
+                    <div style={s.dropEmail}>{user.email}</div>
+                    <span style={s.dropRole}>{user.role}</span>
                   </div>
-                  <div className="dropdown-divider" />
-                  {user.role === 'donor' && (
-                    <Link to="/donor-dashboard" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
-                      📊 Donor Dashboard
+                  {getDashboardLink() && (
+                    <Link to={getDashboardLink()} style={s.dropItem}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      📊 Dashboard
                     </Link>
                   )}
-                  {user.role === 'user' && (
-                    <Link to="/user-dashboard" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
-                      📊 My Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'hospital' && (
-                    <Link to="/hospital-dashboard" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
-                      🏥 Hospital Panel
-                    </Link>
-                  )}
-                  {user.role === 'admin' && (
-                    <Link to="/admin-dashboard" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
-                      ⚙️ Admin Panel
-                    </Link>
-                  )}
-                  <Link to="/notifications" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                  <Link to="/profile" style={s.dropItem}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    👤 Profile
+                  </Link>
+                  <Link to="/notifications" style={s.dropItem}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
                     🔔 Notifications
                   </Link>
-                  <div className="dropdown-divider" />
-                  <button className="dropdown-item logout-item" onClick={handleLogout}>
+                  <button style={s.logoutBtn} onClick={handleLogout}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(220,38,38,0.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
                     🚪 Sign Out
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="auth-buttons">
-              <Link to="/login" className="btn-ghost">Sign In</Link>
-              <Link to="/signup" className="btn-primary" style={{ padding: '9px 20px', fontSize: '14px' }}>
-                Register
-              </Link>
+            <div style={s.authBtns}>
+              <Link to="/login" style={s.loginBtn}>Login</Link>
+              <Link to="/signup" style={s.signupBtn}>Sign Up</Link>
             </div>
           )}
 
-          {/* Mobile menu toggle */}
-          <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)}>
-            <span className={`hamburger ${mobileOpen ? 'open' : ''}`}>
-              <span /><span /><span />
-            </span>
+          {/* Hamburger */}
+          <button className="hamburger" style={s.hamburger} onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+            {menuOpen ? "✕" : "☰"}
           </button>
-        </div>
-      </nav>
-
-      {/* Mobile nav */}
-      <div className={`mobile-nav ${mobileOpen ? 'open' : ''}`}>
-        {navLinks.map(l => (
-          <Link key={l.to} to={l.to}
-            className="mobile-nav-link"
-            onClick={() => setMobileOpen(false)}>
-            <span>{l.icon}</span> {l.label}
-          </Link>
-        ))}
-        <div className="mobile-nav-divider" />
-        {!token ? (
-          <>
-            <Link to="/login" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>🔑 Sign In</Link>
-            <Link to="/signup" className="mobile-nav-link" onClick={() => setMobileOpen(false)}>✍️ Register</Link>
-          </>
-        ) : (
-          <button className="mobile-nav-link" onClick={() => { handleLogout(); setMobileOpen(false); }}>
-            🚪 Sign Out
-          </button>
-        )}
-        <div className="mobile-lang-wrap">
-          <LanguageSelector />
         </div>
       </div>
 
-      {/* Voice listening overlay */}
-      {isListening && (
-        <div className="voice-overlay">
-          <div className="voice-ripple"><div /><div /><div /></div>
-          <div className="voice-icon">🎤</div>
-          <div className="voice-hint">
-            {voiceText || 'Listening... say "find blood", "hospitals", "map"'}
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div style={s.mobileMenu}>
+          {NAV_LINKS.map((link) => (
+            <Link key={link.to} to={link.to} style={s.mobileLink(isActive(link.to))}>
+              <span>{link.icon}</span>
+              <span>{link.label}</span>
+            </Link>
+          ))}
+          {!user && (
+            <>
+              <Link to="/login" style={s.mobileLink(false)}>🔑 Login</Link>
+              <Link to="/signup" style={{ ...s.mobileLink(false), background: "rgba(220,38,38,0.2)", color: "#f87171" }}>🩸 Sign Up</Link>
+            </>
+          )}
+          {user && (
+            <>
+              {getDashboardLink() && <Link to={getDashboardLink()} style={s.mobileLink(false)}>📊 Dashboard</Link>}
+              <button onClick={handleLogout} style={{ ...s.mobileLink(false), border: "none", cursor: "pointer", color: "#f87171", background: "rgba(220,38,38,0.1)" }}>
+                🚪 Sign Out
+              </button>
+            </>
+          )}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem", marginTop: "0.25rem" }}>
+            <LanguageSelector />
           </div>
-          <button onClick={() => recognitionRef.current?.stop()} className="voice-stop-btn">
-            Stop
-          </button>
         </div>
       )}
-    </>
+    </nav>
   );
 }
