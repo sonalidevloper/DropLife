@@ -1,51 +1,189 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './HospitalsPublic.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const DEMO_HOSPITALS = [
-  { id: 1, name: 'AIIMS New Delhi', city: 'Delhi', state: 'Delhi', type: 'Government', speciality: 'Multi-Specialty', bloodBank: true, contact: '011-26588500', rating: 4.8, beds: 2478, established: 1956, address: 'Sri Aurobindo Marg, Ansari Nagar', lat: 28.5672, lng: 77.2100, totalDonors: 1240, urgentNeed: ['O-', 'AB-'], image: '🏥' },
-  { id: 2, name: 'Safdarjung Hospital', city: 'Delhi', state: 'Delhi', type: 'Government', speciality: 'Multi-Specialty', bloodBank: true, contact: '011-26707444', rating: 4.5, beds: 1531, established: 1954, address: 'Sri Aurobindo Marg', lat: 28.5693, lng: 77.2044, totalDonors: 890, urgentNeed: ['B-'], image: '🏥' },
-  { id: 3, name: 'Apollo Hospital', city: 'Delhi', state: 'Delhi', type: 'Private', speciality: 'Cardiac Care', bloodBank: true, contact: '011-71791090', rating: 4.9, beds: 695, established: 1983, address: 'Sarita Vihar, Mathura Road', lat: 28.5355, lng: 77.2837, totalDonors: 567, urgentNeed: ['A-'], image: '🏥' },
-  { id: 4, name: 'KEM Hospital', city: 'Mumbai', state: 'Maharashtra', type: 'Government', speciality: 'Multi-Specialty', bloodBank: true, contact: '022-24107000', rating: 4.6, beds: 1791, established: 1926, address: 'Acharya Donde Marg, Parel', lat: 19.0038, lng: 72.8412, totalDonors: 1100, urgentNeed: ['O+', 'B+'], image: '🏥' },
-  { id: 5, name: 'Fortis Hospital', city: 'Mumbai', state: 'Maharashtra', type: 'Private', speciality: 'Oncology', bloodBank: true, contact: '022-66279999', rating: 4.7, beds: 312, established: 2000, address: 'Mulund Goregaon Link Road', lat: 19.1663, lng: 72.9576, totalDonors: 234, urgentNeed: [], image: '🏥' },
-  { id: 6, name: 'PGI Chandigarh', city: 'Chandigarh', state: 'Punjab', type: 'Government', speciality: 'Multi-Specialty', bloodBank: true, contact: '0172-2752021', rating: 4.8, beds: 2000, established: 1962, address: 'Sector 12, Chandigarh', lat: 30.7589, lng: 76.7765, totalDonors: 876, urgentNeed: ['AB+'], image: '🏥' },
-  { id: 7, name: 'SCBMCH Cuttack', city: 'Cuttack', state: 'Odisha', type: 'Government', speciality: 'Multi-Specialty', bloodBank: true, contact: '0671-2411317', rating: 4.3, beds: 1080, established: 1944, address: 'Mangalabag, Cuttack', lat: 20.4634, lng: 85.8852, totalDonors: 456, urgentNeed: ['O-', 'B-'], image: '🏥' },
-  { id: 8, name: 'KIMS Hospital', city: 'Bhubaneswar', state: 'Odisha', type: 'Private', speciality: 'Multi-Specialty', bloodBank: true, contact: '0674-3011000', rating: 4.7, beds: 850, established: 2005, address: 'Patia, Bhubaneswar', lat: 20.3547, lng: 85.8245, totalDonors: 345, urgentNeed: [], image: '🏥' },
-  { id: 9, name: 'NIMHANS', city: 'Bangalore', state: 'Karnataka', type: 'Government', speciality: 'Neuroscience', bloodBank: true, contact: '080-46110007', rating: 4.9, beds: 1600, established: 1974, address: 'Hosur Road, Bangalore', lat: 12.9411, lng: 77.5955, totalDonors: 678, urgentNeed: ['A+'], image: '🏥' },
-  { id: 10, name: 'Manipal Hospital', city: 'Bangalore', state: 'Karnataka', type: 'Private', speciality: 'Multi-Specialty', bloodBank: true, contact: '080-25023333', rating: 4.8, beds: 608, established: 1991, address: '98 HAL Airport Road', lat: 12.9682, lng: 77.6435, totalDonors: 290, urgentNeed: [], image: '🏥' },
-  { id: 11, name: 'Christian Medical College', city: 'Vellore', state: 'Tamil Nadu', type: 'Private', speciality: 'Multi-Specialty', bloodBank: true, contact: '0416-2281000', rating: 4.9, beds: 2600, established: 1900, address: 'Ida Scudder Road, Vellore', lat: 12.9252, lng: 79.1323, totalDonors: 1450, urgentNeed: ['AB-'], image: '🏥' },
-  { id: 12, name: 'PGIMER Chandigarh', city: 'Chandigarh', state: 'Punjab', type: 'Government', speciality: 'Research Hospital', bloodBank: true, contact: '0172-2746018', rating: 4.7, beds: 1890, established: 1962, address: 'Sector 12, Chandigarh', lat: 30.7567, lng: 76.7783, totalDonors: 780, urgentNeed: ['B+'], image: '🏥' },
+const MOCK_HOSPITALS = [
+  {
+    _id: "h1",
+    name: "AIIMS Bhubaneswar",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "Sijua, Patrapada, Bhubaneswar",
+    phone: "0674-2476789",
+    email: "bloodbank@aiimsbbs.edu.in",
+    type: "Government",
+    bloodAvailable: ["A+", "B+", "O+", "AB+", "A-"],
+    totalStock: 125,
+    rating: 4.8,
+    verified: true,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "https://aiimsbhubaneswar.nic.in",
+    lat: 20.2961,
+    lng: 85.8245,
+  },
+  {
+    _id: "h2",
+    name: "SCB Medical College & Hospital",
+    city: "Cuttack",
+    state: "Odisha",
+    address: "Manglabag, Cuttack",
+    phone: "0671-2414004",
+    email: "scbmch@odisha.gov.in",
+    type: "Government",
+    bloodAvailable: ["A+", "B+", "O+", "O-"],
+    totalStock: 78,
+    rating: 4.5,
+    verified: true,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "",
+    lat: 20.4625,
+    lng: 85.8830,
+  },
+  {
+    _id: "h3",
+    name: "Capital Hospital",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "Unit 6, Bhubaneswar",
+    phone: "0674-2391983",
+    email: "capitalhospital@odisha.gov.in",
+    type: "Government",
+    bloodAvailable: ["A+", "B+", "AB-"],
+    totalStock: 45,
+    rating: 4.2,
+    verified: true,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "",
+    lat: 20.2699,
+    lng: 85.8387,
+  },
+  {
+    _id: "h4",
+    name: "SUM Hospital",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "K8 Kalinga Nagar, Bhubaneswar",
+    phone: "0674-2359355",
+    email: "bloodbank@sumhospital.in",
+    type: "Private",
+    bloodAvailable: ["O+", "B+", "B-"],
+    totalStock: 32,
+    rating: 4.6,
+    verified: true,
+    emergency: false,
+    operatingHours: "8 AM – 8 PM",
+    website: "https://sumhospital.in",
+    lat: 20.2521,
+    lng: 85.7954,
+  },
+  {
+    _id: "h5",
+    name: "Kalinga Hospital",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "Nayapalli, Bhubaneswar",
+    phone: "0674-2557776",
+    email: "bloodbank@kalingahospital.com",
+    type: "Private",
+    bloodAvailable: ["A+", "B+", "O+", "A-", "AB+", "O-"],
+    totalStock: 165,
+    rating: 4.7,
+    verified: true,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "https://kalingahospital.com",
+    lat: 20.2784,
+    lng: 85.8137,
+  },
+  {
+    _id: "h6",
+    name: "Apollo Hospitals",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "Plot No. 251, Sainik School Road",
+    phone: "0674-6661066",
+    email: "bloodbank@apollobbsr.com",
+    type: "Private",
+    bloodAvailable: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    totalStock: 210,
+    rating: 4.9,
+    verified: true,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "https://apollohospitals.com",
+    lat: 20.2956,
+    lng: 85.8498,
+  },
+  {
+    _id: "h7",
+    name: "HI-Tech Medical College",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "Pandara, Bhubaneswar",
+    phone: "0674-6646700",
+    email: "blood@hi-tech.ac.in",
+    type: "Private",
+    bloodAvailable: ["A+", "O+", "B+"],
+    totalStock: 55,
+    rating: 4.1,
+    verified: true,
+    emergency: false,
+    operatingHours: "9 AM – 6 PM",
+    website: "",
+    lat: 20.3200,
+    lng: 85.8150,
+  },
+  {
+    _id: "h8",
+    name: "KIMS Hospital",
+    city: "Bhubaneswar",
+    state: "Odisha",
+    address: "KIIT Road, Bhubaneswar",
+    phone: "0674-6699999",
+    email: "bloodbank@kiims.ac.in",
+    type: "Private",
+    bloodAvailable: ["AB+", "A+", "B+", "O+", "O-"],
+    totalStock: 88,
+    rating: 4.4,
+    verified: false,
+    emergency: true,
+    operatingHours: "24/7",
+    website: "",
+    lat: 20.3541,
+    lng: 85.8192,
+  },
 ];
 
-const STATES = ['All States', 'Delhi', 'Maharashtra', 'Punjab', 'Odisha', 'Karnataka', 'Tamil Nadu', 'West Bengal', 'Rajasthan', 'Gujarat', 'Telangana'];
-const HOSPITAL_TYPES = ['All Types', 'Government', 'Private', 'Trust'];
-const BLOOD_TYPES = ['Any Blood Type', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const CITIES = ["All Cities", "Bhubaneswar", "Cuttack"];
+const TYPES = ["All Types", "Government", "Private"];
 
 export default function HospitalsPublic() {
-  const navigate = useNavigate();
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedState, setSelectedState] = useState('All States');
-  const [selectedType, setSelectedType] = useState('All Types');
-  const [selectedBlood, setSelectedBlood] = useState('Any Blood Type');
-  const [bloodBankOnly, setBloodBankOnly] = useState(false);
-  const [urgentOnly, setUrgentOnly] = useState(false);
-  const [selectedHospital, setSelectedHospital] = useState(null);
-  const searchRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("All Cities");
+  const [selectedType, setSelectedType] = useState("All Types");
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState("all");
+  const [emergencyOnly, setEmergencyOnly] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("rating");
+  const [viewMode, setViewMode] = useState("grid");
+  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     const fetchHospitals = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/hospitals/public`);
-        setHospitals(res.data?.data || res.data || DEMO_HOSPITALS);
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/hospitals/public`
+        );
+        setHospitals(Array.isArray(data) ? data : data.data || MOCK_HOSPITALS);
       } catch {
-        setHospitals(DEMO_HOSPITALS);
+        setHospitals(MOCK_HOSPITALS);
       } finally {
         setLoading(false);
       }
@@ -53,258 +191,482 @@ export default function HospitalsPublic() {
     fetchHospitals();
   }, []);
 
-  // Live search suggestions
-  useEffect(() => {
-    if (searchQuery.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-    const matches = hospitals
-      .filter(h =>
-        h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        h.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        h.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        h.speciality?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .slice(0, 6);
-    setSuggestions(matches);
-    setShowSuggestions(true);
-  }, [searchQuery, hospitals]);
-
-  // Close suggestions on outside click
-  useEffect(() => {
-    const handler = e => { if (searchRef.current && !searchRef.current.contains(e.target)) setShowSuggestions(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+  const startVoiceSearch = useCallback(() => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      alert("Voice search is not supported in your browser. Try Chrome.");
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (e) => {
+      setSearchQuery(e.results[0][0].transcript);
+      setIsListening(false);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
   }, []);
 
-  const filtered = hospitals.filter(h => {
-    const matchSearch = !searchQuery ||
-      h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.state.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchState = selectedState === 'All States' || h.state === selectedState;
-    const matchType = selectedType === 'All Types' || h.type === selectedType;
-    const matchBlood = selectedBlood === 'Any Blood Type' || h.urgentNeed?.includes(selectedBlood);
-    const matchBloodBank = !bloodBankOnly || h.bloodBank;
-    const matchUrgent = !urgentOnly || h.urgentNeed?.length > 0;
-    return matchSearch && matchState && matchType && matchBlood && matchBloodBank && matchUrgent;
-  });
+  const filtered = hospitals
+    .filter((h) => {
+      const q = searchQuery.toLowerCase();
+      const searchMatch = !searchQuery ||
+        h.name.toLowerCase().includes(q) ||
+        h.city.toLowerCase().includes(q) ||
+        h.address.toLowerCase().includes(q);
+      const cityMatch = selectedCity === "All Cities" || h.city === selectedCity;
+      const typeMatch = selectedType === "All Types" || h.type === selectedType;
+      const bloodMatch = selectedBloodGroup === "all" || h.bloodAvailable.includes(selectedBloodGroup);
+      const emergencyMatch = !emergencyOnly || h.emergency;
+      const verifiedMatch = !verifiedOnly || h.verified;
+      return searchMatch && cityMatch && typeMatch && bloodMatch && emergencyMatch && verifiedMatch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "rating") return b.rating - a.rating;
+      if (sortBy === "stock") return b.totalStock - a.totalStock;
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return 0;
+    });
 
-  const clearFilters = () => {
-    setSearchQuery(''); setSelectedState('All States'); setSelectedType('All Types');
-    setSelectedBlood('Any Blood Type'); setBloodBankOnly(false); setUrgentOnly(false);
+  const s = {
+    page: {
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+      fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+      color: "#e2e8f0",
+    },
+    hero: {
+      background: "linear-gradient(135deg, #dc2626, #7f1d1d)",
+      padding: "3rem 2rem",
+      textAlign: "center",
+    },
+    heroTitle: { fontSize: "clamp(1.8rem, 5vw, 2.8rem)", fontWeight: 900, margin: 0 },
+    heroSub: { opacity: 0.85, fontSize: "1rem", marginTop: "0.5rem" },
+    statsBar: {
+      background: "rgba(255,255,255,0.04)",
+      backdropFilter: "blur(12px)",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      padding: "1rem 2rem",
+      display: "flex",
+      justifyContent: "center",
+      gap: "3rem",
+      flexWrap: "wrap",
+    },
+    statItem: { textAlign: "center" },
+    statNum: { fontSize: "1.5rem", fontWeight: 900, color: "#f87171" },
+    statLabel: { fontSize: "0.75rem", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.06em" },
+    container: { maxWidth: 1300, margin: "0 auto", padding: "2rem 1.5rem" },
+    searchRow: {
+      display: "flex",
+      gap: "0.75rem",
+      marginBottom: "1.5rem",
+      flexWrap: "wrap",
+    },
+    searchBox: {
+      flex: 1,
+      minWidth: 260,
+      display: "flex",
+      background: "rgba(255,255,255,0.07)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "14px",
+      overflow: "hidden",
+      alignItems: "center",
+    },
+    searchInput: {
+      flex: 1,
+      background: "transparent",
+      border: "none",
+      padding: "0.85rem 1.2rem",
+      color: "#fff",
+      fontSize: "0.95rem",
+      outline: "none",
+    },
+    voiceBtn: (active) => ({
+      background: active ? "#dc2626" : "transparent",
+      border: "none",
+      color: active ? "#fff" : "rgba(255,255,255,0.5)",
+      padding: "0 1rem",
+      cursor: "pointer",
+      fontSize: "1.2rem",
+      animation: active ? "pulse 1s infinite" : "none",
+    }),
+    filtersRow: {
+      display: "flex",
+      gap: "0.75rem",
+      marginBottom: "1.5rem",
+      flexWrap: "wrap",
+      alignItems: "center",
+    },
+    select: {
+      background: "rgba(255,255,255,0.07)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "10px",
+      padding: "0.6rem 1rem",
+      color: "#fff",
+      fontSize: "0.88rem",
+      cursor: "pointer",
+    },
+    toggleChip: (active) => ({
+      background: active ? "rgba(220,38,38,0.6)" : "rgba(255,255,255,0.07)",
+      border: `1px solid ${active ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.12)"}`,
+      borderRadius: "10px",
+      padding: "0.6rem 1rem",
+      color: "#fff",
+      cursor: "pointer",
+      fontWeight: active ? 700 : 400,
+      fontSize: "0.85rem",
+      transition: "all 0.2s",
+    }),
+    bloodGroupRow: {
+      display: "flex",
+      gap: "0.5rem",
+      marginBottom: "1.5rem",
+      flexWrap: "wrap",
+      alignItems: "center",
+    },
+    bgBtn: (grp) => ({
+      background: selectedBloodGroup === grp ? "rgba(220,38,38,0.7)" : "rgba(255,255,255,0.06)",
+      border: `1px solid ${selectedBloodGroup === grp ? "rgba(220,38,38,0.6)" : "rgba(255,255,255,0.1)"}`,
+      borderRadius: "8px",
+      padding: "0.4rem 0.9rem",
+      color: "#fff",
+      cursor: "pointer",
+      fontWeight: 700,
+      fontSize: "0.85rem",
+    }),
+    resultsRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "1rem",
+      flexWrap: "wrap",
+      gap: "0.5rem",
+    },
+    viewToggle: {
+      display: "flex",
+      background: "rgba(255,255,255,0.06)",
+      borderRadius: "10px",
+      overflow: "hidden",
+      border: "1px solid rgba(255,255,255,0.1)",
+    },
+    vBtn: (active) => ({
+      padding: "0.5rem 1rem",
+      border: "none",
+      background: active ? "rgba(220,38,38,0.6)" : "transparent",
+      color: "#fff",
+      cursor: "pointer",
+      fontWeight: active ? 700 : 400,
+      fontSize: "0.85rem",
+    }),
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+      gap: "1.25rem",
+    },
+    card: {
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(12px)",
+      border: "1px solid rgba(255,255,255,0.09)",
+      borderRadius: "20px",
+      padding: "1.5rem",
+      transition: "all 0.25s ease",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.9rem",
+    },
+    cardTop: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" },
+    cardName: { fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.3 },
+    cardAddr: { opacity: 0.6, fontSize: "0.8rem", marginTop: "3px" },
+    typeBadge: (type) => ({
+      background: type === "Government" ? "#1e3a5f" : "#1e1b4b",
+      color: type === "Government" ? "#60a5fa" : "#a78bfa",
+      borderRadius: "6px",
+      padding: "0.25rem 0.6rem",
+      fontSize: "0.72rem",
+      fontWeight: 700,
+      whiteSpace: "nowrap",
+    }),
+    tagRow: { display: "flex", gap: "0.5rem", flexWrap: "wrap" },
+    tag: (color) => ({
+      background: `${color}22`,
+      color,
+      borderRadius: "6px",
+      padding: "0.2rem 0.6rem",
+      fontSize: "0.72rem",
+      fontWeight: 700,
+    }),
+    bloodRow: { display: "flex", flexWrap: "wrap", gap: "0.4rem" },
+    bloodTag: (highlight) => ({
+      background: highlight ? "rgba(220,38,38,0.3)" : "rgba(255,255,255,0.07)",
+      border: highlight ? "1px solid rgba(220,38,38,0.5)" : "1px solid rgba(255,255,255,0.1)",
+      color: highlight ? "#f87171" : "#e2e8f0",
+      borderRadius: "6px",
+      padding: "0.2rem 0.6rem",
+      fontSize: "0.78rem",
+      fontWeight: 700,
+    }),
+    infoRow: { display: "flex", gap: "1rem", fontSize: "0.82rem", opacity: 0.7, flexWrap: "wrap" },
+    ratingRow: { display: "flex", alignItems: "center", gap: "0.3rem" },
+    star: { color: "#fbbf24", fontSize: "0.9rem" },
+    actionRow: { display: "flex", gap: "0.6rem", marginTop: "0.25rem" },
+    actionBtn: (primary) => ({
+      flex: primary ? 1 : 0,
+      background: primary ? "linear-gradient(135deg, #dc2626, #b91c1c)" : "rgba(255,255,255,0.07)",
+      border: primary ? "none" : "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "10px",
+      color: "#fff",
+      padding: "0.6rem 1rem",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: "0.85rem",
+      textDecoration: "none",
+      textAlign: "center",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "0.3rem",
+    }),
+    listRow: {
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: "14px",
+      padding: "1rem 1.5rem",
+      display: "flex",
+      alignItems: "center",
+      gap: "1rem",
+      marginBottom: "0.75rem",
+      transition: "all 0.2s",
+      flexWrap: "wrap",
+    },
+    emptyState: { textAlign: "center", padding: "4rem 2rem", opacity: 0.5 },
+  };
+
+  const renderStars = (rating) => {
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5;
+    return Array.from({ length: 5 }, (_, i) => (
+      <span key={i} style={s.star}>{i < full ? "★" : i === full && half ? "½" : "☆"}</span>
+    ));
   };
 
   return (
-    <div className="hospitals-page">
-      {/* Header */}
-      <div className="hosp-header">
-        <div>
-          <h1 className="page-title">🏥 Find Hospitals</h1>
-          <p className="page-subtitle">{hospitals.length} partner hospitals across India with blood banks</p>
-        </div>
-        <div className="hosp-header-stats">
-          <div className="hosp-stat"><span className="hosp-stat-val">{hospitals.filter(h => h.urgentNeed?.length > 0).length}</span><span>Urgent Need</span></div>
-          <div className="hosp-stat"><span className="hosp-stat-val">{hospitals.filter(h => h.bloodBank).length}</span><span>Blood Banks</span></div>
-          <div className="hosp-stat"><span className="hosp-stat-val">{hospitals.reduce((a, h) => a + (h.totalDonors || 0), 0).toLocaleString()}</span><span>Total Donors</span></div>
-        </div>
+    <div style={s.page}>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+        select option { background: #1e293b; color: white; }
+      `}</style>
+
+      {/* Hero */}
+      <div style={s.hero}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🏥</div>
+        <h1 style={s.heroTitle}>Find Hospitals & Blood Banks</h1>
+        <p style={s.heroSub}>Search verified hospitals with real-time blood stock availability</p>
       </div>
 
-      {/* Search + Filters */}
-      <div className="hosp-filters-wrap">
-        {/* Search with live suggestions */}
-        <div className="hosp-search-container" ref={searchRef}>
-          <div className="search-wrapper">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search hospital name, city, state or speciality..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            />
-            {searchQuery && (
-              <button className="search-clear" onClick={() => { setSearchQuery(''); setSuggestions([]); }}>
-                ×
-              </button>
-            )}
+      {/* Quick Stats */}
+      <div style={s.statsBar}>
+        {[
+          ["Total Hospitals", hospitals.length],
+          ["With 24/7 Service", hospitals.filter((h) => h.operatingHours === "24/7").length],
+          ["Verified", hospitals.filter((h) => h.verified).length],
+          ["Emergency Ready", hospitals.filter((h) => h.emergency).length],
+        ].map(([label, val]) => (
+          <div key={label} style={s.statItem}>
+            <div style={s.statNum}>{val}</div>
+            <div style={s.statLabel}>{label}</div>
           </div>
-
-          {/* Live suggestions dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="search-suggestions">
-              {suggestions.map(h => (
-                <button key={h.id} className="suggestion-item"
-                  onClick={() => { setSearchQuery(h.name); setShowSuggestions(false); setSelectedHospital(h); }}>
-                  <span className="sug-icon">🏥</span>
-                  <div className="sug-info">
-                    <span className="sug-name">{h.name}</span>
-                    <span className="sug-sub">{h.city}, {h.state} · {h.type}</span>
-                  </div>
-                  {h.urgentNeed?.length > 0 && (
-                    <span className="badge badge-danger" style={{ fontSize: '10px' }}>Urgent</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Filter row */}
-        <div className="hosp-filter-row">
-          <select className="form-select" value={selectedState} onChange={e => setSelectedState(e.target.value)}>
-            {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select className="form-select" value={selectedType} onChange={e => setSelectedType(e.target.value)}>
-            {HOSPITAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <select className="form-select" value={selectedBlood} onChange={e => setSelectedBlood(e.target.value)}>
-            {BLOOD_TYPES.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <label className="toggle-label">
-            <input type="checkbox" checked={bloodBankOnly} onChange={e => setBloodBankOnly(e.target.checked)} />
-            Blood Bank Only
-          </label>
-          <label className="toggle-label urgent">
-            <input type="checkbox" checked={urgentOnly} onChange={e => setUrgentOnly(e.target.checked)} />
-            🔴 Urgent Need
-          </label>
-          {(searchQuery || selectedState !== 'All States' || selectedType !== 'All Types' || bloodBankOnly || urgentOnly) && (
-            <button className="btn-ghost" onClick={clearFilters} style={{ fontSize: '13px' }}>Clear All ×</button>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Results */}
-      <div className="hosp-results-info">
-        Showing {filtered.length} of {hospitals.length} hospitals
-      </div>
-
-      {loading ? (
-        <div className="loading-container">
-          <div className="spinner" /><p className="loading-text">Loading hospitals...</p>
+      <div style={s.container}>
+        {/* Search */}
+        <div style={s.searchRow}>
+          <div style={s.searchBox}>
+            <span style={{ padding: "0 0.5rem 0 1.2rem", opacity: 0.5, fontSize: "1rem" }}>🔍</span>
+            <input
+              style={s.searchInput}
+              placeholder="Search hospital name, city, address..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button style={s.voiceBtn(isListening)} onClick={startVoiceSearch} title="Voice Search">
+              🎙️
+            </button>
+          </div>
+          <select style={s.select} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="rating">Sort: Rating</option>
+            <option value="stock">Sort: Stock</option>
+            <option value="name">Sort: Name A-Z</option>
+          </select>
+          <Link to="/map" style={{ ...s.actionBtn(false), padding: "0.6rem 1.2rem", textDecoration: "none", borderRadius: "10px" }}>
+            🗺️ Map View
+          </Link>
         </div>
-      ) : (
-        <div className="hosp-grid">
-          {filtered.length === 0 ? (
-            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-state-icon">🏥</div>
-              <h3>No hospitals found</h3>
-              <p>Try different search terms or remove some filters.</p>
-              <button className="btn-primary" style={{ marginTop: 16 }} onClick={clearFilters}>Clear Filters</button>
-            </div>
-          ) : filtered.map(h => (
-            <div key={h.id} className="hosp-card" onClick={() => setSelectedHospital(h)}>
-              <div className="hosp-card-top">
-                <div className="hosp-icon">🏥</div>
-                <div className="hosp-card-main">
-                  <div className="hosp-name">{h.name}</div>
-                  <div className="hosp-location">📍 {h.city}, {h.state}</div>
-                  <div className="hosp-meta">
-                    <span className={`badge ${h.type === 'Government' ? 'badge-info' : 'badge-success'}`}>{h.type}</span>
-                    {h.bloodBank && <span className="badge badge-red">🩸 Blood Bank</span>}
-                    {h.urgentNeed?.length > 0 && <span className="badge badge-danger">⚡ Urgent</span>}
-                  </div>
-                </div>
-                <div className="hosp-rating">
-                  <span className="rating-star">★</span>
-                  <span className="rating-val">{h.rating}</span>
-                </div>
-              </div>
 
-              {h.urgentNeed?.length > 0 && (
-                <div className="hosp-urgent-strip">
-                  <span className="urgent-label">⚡ Urgent need:</span>
-                  <div className="urgent-types">
-                    {h.urgentNeed.map(bt => (
-                      <span key={bt} className="blood-badge critical" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>{bt}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {/* Filters */}
+        <div style={s.filtersRow}>
+          <select style={s.select} value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+            {CITIES.map((c) => <option key={c}>{c}</option>)}
+          </select>
+          <select style={s.select} value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
+            {TYPES.map((t) => <option key={t}>{t}</option>)}
+          </select>
+          <button style={s.toggleChip(emergencyOnly)} onClick={() => setEmergencyOnly(!emergencyOnly)}>
+            🚨 Emergency 24/7
+          </button>
+          <button style={s.toggleChip(verifiedOnly)} onClick={() => setVerifiedOnly(!verifiedOnly)}>
+            ✓ Verified Only
+          </button>
+        </div>
 
-              <div className="hosp-stats-row">
-                <div className="hosp-mini-stat">
-                  <span className="hms-val">{(h.beds || 0).toLocaleString()}</span>
-                  <span className="hms-label">Beds</span>
-                </div>
-                <div className="hosp-mini-stat">
-                  <span className="hms-val">{h.established}</span>
-                  <span className="hms-label">Est.</span>
-                </div>
-                <div className="hosp-mini-stat">
-                  <span className="hms-val">{(h.totalDonors || 0).toLocaleString()}</span>
-                  <span className="hms-label">Donors</span>
-                </div>
-              </div>
-
-              <div className="hosp-card-footer">
-                <span className="hosp-speciality">🔬 {h.speciality}</span>
-                <button className="btn-primary" style={{ fontSize: '12px', padding: '7px 14px' }}
-                  onClick={e => { e.stopPropagation(); window.open(`tel:${h.contact}`); }}>
-                  📞 Call
-                </button>
-              </div>
-            </div>
+        {/* Blood Group Filter */}
+        <div style={s.bloodGroupRow}>
+          <span style={{ opacity: 0.6, fontSize: "0.85rem", fontWeight: 600 }}>Blood Group:</span>
+          <button style={s.bgBtn("all")} onClick={() => setSelectedBloodGroup("all")}>All</button>
+          {BLOOD_GROUPS.map((g) => (
+            <button key={g} style={s.bgBtn(g)} onClick={() => setSelectedBloodGroup(selectedBloodGroup === g ? "all" : g)}>
+              {g}
+            </button>
           ))}
         </div>
-      )}
 
-      {/* Hospital detail modal */}
-      {selectedHospital && (
-        <div className="modal-overlay" onClick={() => setSelectedHospital(null)}>
-          <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">{selectedHospital.name}</h2>
-              <button className="modal-close" onClick={() => setSelectedHospital(null)}>×</button>
-            </div>
-            <div className="hosp-detail-content">
-              <div className="hosp-detail-row">
-                <span>📍 Address</span>
-                <strong>{selectedHospital.address}, {selectedHospital.city}</strong>
-              </div>
-              <div className="hosp-detail-row">
-                <span>📞 Contact</span>
-                <strong style={{ color: 'var(--info)' }}>{selectedHospital.contact}</strong>
-              </div>
-              <div className="hosp-detail-row">
-                <span>🏥 Type</span>
-                <strong>{selectedHospital.type} Hospital</strong>
-              </div>
-              <div className="hosp-detail-row">
-                <span>🔬 Speciality</span>
-                <strong>{selectedHospital.speciality}</strong>
-              </div>
-              <div className="hosp-detail-row">
-                <span>🛏 Beds</span>
-                <strong>{selectedHospital.beds?.toLocaleString()}</strong>
-              </div>
-              <div className="hosp-detail-row">
-                <span>⭐ Rating</span>
-                <strong>{selectedHospital.rating} / 5.0</strong>
-              </div>
-              {selectedHospital.urgentNeed?.length > 0 && (
-                <div className="hosp-detail-urgent">
-                  <span>⚡ Urgent Blood Need:</span>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    {selectedHospital.urgentNeed.map(bt => (
-                      <div key={bt} className="blood-badge critical">{bt}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                <button className="btn-outline" style={{ flex: 1 }}
-                  onClick={() => navigate(`/map?hospital=${selectedHospital.id}`)}>
-                  📍 View on Map
-                </button>
-                <button className="btn-primary" style={{ flex: 2 }}
-                  onClick={() => navigate('/blood-request')}>
-                  Request Blood Here →
-                </button>
-              </div>
-            </div>
+        {/* Results row */}
+        <div style={s.resultsRow}>
+          <div style={{ opacity: 0.7, fontSize: "0.9rem" }}>
+            <strong style={{ color: "#f87171" }}>{filtered.length}</strong> hospitals found
+            {selectedBloodGroup !== "all" && ` with ${selectedBloodGroup} blood available`}
+            {isListening && <span style={{ color: "#f87171", marginLeft: "1rem" }}>🎙️ Listening...</span>}
+          </div>
+          <div style={s.viewToggle}>
+            <button style={s.vBtn(viewMode === "grid")} onClick={() => setViewMode("grid")}>⊞ Grid</button>
+            <button style={s.vBtn(viewMode === "list")} onClick={() => setViewMode("list")}>☰ List</button>
           </div>
         </div>
-      )}
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "4rem" }}>
+            <div style={{ fontSize: "3rem" }}>🏥</div>
+            <p>Loading hospitals...</p>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && filtered.length === 0 && (
+          <div style={s.emptyState}>
+            <div style={{ fontSize: "3rem" }}>🔍</div>
+            <h3>No hospitals found</h3>
+            <p>Try adjusting your search or filters</p>
+            <button style={{ ...s.actionBtn(true), display: "inline-block", padding: "0.7rem 2rem", borderRadius: "12px", width: "auto" }}
+              onClick={() => { setSearchQuery(""); setSelectedBloodGroup("all"); setSelectedCity("All Cities"); setSelectedType("All Types"); setEmergencyOnly(false); setVerifiedOnly(false); }}
+            >
+              Clear All Filters
+            </button>
+          </div>
+        )}
+
+        {/* Grid View */}
+        {!loading && viewMode === "grid" && (
+          <div style={s.grid}>
+            {filtered.map((h) => (
+              <div key={h._id} style={s.card}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)"; e.currentTarget.style.border = "1px solid rgba(220,38,38,0.3)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.09)"; }}
+              >
+                <div style={s.cardTop}>
+                  <div>
+                    <div style={s.cardName}>{h.name}</div>
+                    <div style={s.cardAddr}>📍 {h.address}</div>
+                  </div>
+                  <span style={s.typeBadge(h.type)}>{h.type}</span>
+                </div>
+
+                <div style={s.tagRow}>
+                  {h.verified && <span style={s.tag("#22c55e")}>✓ Verified</span>}
+                  {h.emergency && <span style={s.tag("#ef4444")}>🚨 Emergency</span>}
+                  <span style={s.tag("#a78bfa")}>⏰ {h.operatingHours}</span>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: "0.78rem", opacity: 0.6, marginBottom: "0.4rem" }}>Blood Available ({h.bloodAvailable.length} groups):</div>
+                  <div style={s.bloodRow}>
+                    {BLOOD_GROUPS.map((g) => (
+                      h.bloodAvailable.includes(g) ? (
+                        <span key={g} style={s.bloodTag(selectedBloodGroup === g)}>{g}</span>
+                      ) : null
+                    ))}
+                    {h.bloodAvailable.length === 0 && <span style={{ opacity: 0.4, fontSize: "0.8rem" }}>No stock data</span>}
+                  </div>
+                </div>
+
+                <div style={s.infoRow}>
+                  <div style={s.ratingRow}>
+                    {renderStars(h.rating)}
+                    <span style={{ marginLeft: "0.25rem" }}>{h.rating}</span>
+                  </div>
+                  <span>🩸 {h.totalStock} units</span>
+                  <span>📞 <a href={`tel:${h.phone}`} style={{ color: "#f87171", textDecoration: "none" }}>{h.phone}</a></span>
+                </div>
+
+                <div style={s.actionRow}>
+                  <Link to={`/blood-availability?hospital=${h._id}`} style={s.actionBtn(true)}>
+                    🩸 View Stock
+                  </Link>
+                  <a href={`tel:${h.phone}`} style={{ ...s.actionBtn(false), padding: "0.6rem 0.8rem" }} title="Call">📞</a>
+                  <Link to={`/map?hospital=${h._id}`} style={{ ...s.actionBtn(false), padding: "0.6rem 0.8rem" }} title="Map">🗺️</Link>
+                  {h.website && (
+                    <a href={h.website} target="_blank" rel="noopener noreferrer" style={{ ...s.actionBtn(false), padding: "0.6rem 0.8rem" }} title="Website">🌐</a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* List View */}
+        {!loading && viewMode === "list" && (
+          <div>
+            {filtered.map((h) => (
+              <div key={h._id} style={s.listRow}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+              >
+                <div style={{ flex: 2, minWidth: 200 }}>
+                  <div style={{ fontWeight: 700 }}>{h.name}</div>
+                  <div style={{ fontSize: "0.8rem", opacity: 0.6 }}>📍 {h.city} · {h.type}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 160, display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                  {h.bloodAvailable.map((g) => (
+                    <span key={g} style={{ background: selectedBloodGroup === g ? "rgba(220,38,38,0.3)" : "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", padding: "1px 6px", fontSize: "0.75rem", fontWeight: 700 }}>
+                      {g}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ minWidth: 80, textAlign: "center" }}>
+                  <div style={{ fontWeight: 700, color: "#f87171" }}>{h.totalStock}</div>
+                  <div style={{ fontSize: "0.72rem", opacity: 0.5 }}>units</div>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  {h.verified && <span style={{ color: "#22c55e", fontSize: "0.8rem" }}>✓</span>}
+                  {h.emergency && <span style={{ color: "#ef4444", fontSize: "0.8rem" }}>🚨</span>}
+                  <span style={{ fontSize: "0.8rem", opacity: 0.6 }}>{h.rating}⭐</span>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <a href={`tel:${h.phone}`} style={{ ...s.actionBtn(false), padding: "0.4rem 0.8rem", textDecoration: "none", borderRadius: "8px" }}>📞</a>
+                  <Link to={`/blood-availability?hospital=${h._id}`} style={{ ...s.actionBtn(true), padding: "0.4rem 1rem", textDecoration: "none", borderRadius: "8px", whiteSpace: "nowrap" }}>
+                    View Stock →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
