@@ -1,124 +1,276 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import Navbar from './components/Navbar';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LoadingSpinner from "./components/LoadingSpinner";
+import VoiceAssistant from "./components/VoiceAssistant";
 
-// ── Lazy-loaded pages ─────────────────────────────────────────────
-const Welcome           = lazy(() => import('./pages/Welcome'));
-const Home              = lazy(() => import('./pages/Home'));
-const Login             = lazy(() => import('./pages/Login'));
-const Signup            = lazy(() => import('./pages/Signup'));
-const ForgotPassword    = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword     = lazy(() => import('./pages/ResetPassword'));
+// ─── Lazy-loaded pages ────────────────────────────────────────────────────────
+const Welcome           = lazy(() => import("./pages/Welcome"));
+const Home              = lazy(() => import("./pages/Home"));
+const Login             = lazy(() => import("./pages/Login"));
+const Signup            = lazy(() => import("./pages/Signup"));
+const ForgotPassword    = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword     = lazy(() => import("./pages/ResetPassword"));
 
-const DonorDashboard    = lazy(() => import('./pages/DonorDashboard'));
-const UserDashboard     = lazy(() => import('./pages/UserDashboard'));
+// Donor
+const DonorDashboard    = lazy(() => import("./pages/DonorDashboard"));
 
-const HospitalLogin     = lazy(() => import('./pages/HospitalLogin'));
-const HospitalSignup    = lazy(() => import('./pages/HospitalSignup'));
-const HospitalDashboard = lazy(() => import('./pages/HospitalDashboard'));
-const HospitalBloodBank = lazy(() => import('./pages/HospitalBloodBank'));
-const HospitalDeliveries= lazy(() => import('./pages/HospitalDeliveries'));
-const HospitalRequests  = lazy(() => import('./pages/HospitalRequests'));
-const HospitalPatients  = lazy(() => import('./pages/HospitalPatients'));
-const HospitalStaff     = lazy(() => import('./pages/HospitalStaff'));
+// User
+const UserDashboard     = lazy(() => import("./pages/UserDashboard"));
 
-const AdminDashboard    = lazy(() => import('./pages/AdminDashboard'));
-const DeliveryRecords   = lazy(() => import('./pages/DeliveryRecords'));
+// Hospital
+const HospitalLogin     = lazy(() => import("./pages/HospitalLogin"));
+const HospitalSignup    = lazy(() => import("./pages/HospitalSignup"));
+const HospitalDashboard = lazy(() => import("./pages/HospitalDashboard"));
+const HospitalBloodBank = lazy(() => import("./pages/HospitalBloodBank"));
+const HospitalDeliveries= lazy(() => import("./pages/HospitalDeliveries"));
+const HospitalRequests  = lazy(() => import("./pages/HospitalRequests"));
+const HospitalPatients  = lazy(() => import("./pages/HospitalPatients"));
+const HospitalStaff     = lazy(() => import("./pages/HospitalStaff"));
 
-const BloodRequest      = lazy(() => import('./pages/BloodRequest'));
-const BloodAvailability = lazy(() => import('./pages/BloodAvailability'));
-const DonationCamps     = lazy(() => import('./pages/DonationCamps'));
-const DonorList         = lazy(() => import('./pages/DonorList'));
-const BloodStockManagement = lazy(() => import('./pages/BloodStockManagement'));
-const HospitalsPublic   = lazy(() => import('./pages/HospitalsPublic'));
-const MapView           = lazy(() => import('./pages/MapView'));
-const Analytics         = lazy(() => import('./pages/Analytics'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+// Public
+const HospitalsPublic   = lazy(() => import("./pages/HospitalsPublic"));
+const BloodAvailability = lazy(() => import("./pages/BloodAvailability"));
+const BloodRequest      = lazy(() => import("./pages/BloodRequest"));
+const DonationCamps     = lazy(() => import("./pages/DonationCamps"));
+const DonorList         = lazy(() => import("./pages/DonorList"));
+const MapView           = lazy(() => import("./pages/MapView"));
 
-const About             = lazy(() => import('./pages/About'));
-const Contact           = lazy(() => import('./pages/Contact'));
-const Privacy           = lazy(() => import('./pages/Privacy'));
-const Helpline          = lazy(() => import('./pages/Helpline'));
+// Admin
+const AdminDashboard    = lazy(() => import("./pages/AdminDashboard"));
+const BloodStockManagement = lazy(() => import("./pages/BloodStockManagement"));
+const DeliveryRecords   = lazy(() => import("./pages/DeliveryRecords"));
+const Analytics         = lazy(() => import("./pages/Analytics"));
 
-// ── Route guards ──────────────────────────────────────────────────
-function ProtectedRoute({ children, roles }) {
-  const { user, token } = useSelector(s => s.auth);
-  if (!token) return <Navigate to="/login" replace />;
-  if (roles && user && !roles.includes(user.role)) return <Navigate to="/home" replace />;
-  return children;
+// Other
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const About             = lazy(() => import("./pages/About"));
+const Contact           = lazy(() => import("./pages/Contact"));
+const Privacy           = lazy(() => import("./pages/Privacy"));
+const Helpline          = lazy(() => import("./pages/Helpline"));
+
+// ─── Layout wrapper ───────────────────────────────────────────────────────────
+function Layout({ children, hideNav = false, hideFooter = false }) {
+  return (
+    <>
+      {!hideNav && <Navbar />}
+      <main style={{ minHeight: "100vh" }}>
+        <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+      </main>
+      {!hideFooter && <Footer />}
+      <VoiceAssistant />
+    </>
+  );
 }
-
-function PublicOnlyRoute({ children }) {
-  const { token } = useSelector(s => s.auth);
-  if (token) return <Navigate to="/home" replace />;
-  return children;
-}
-
-// ── Fallback spinner ──────────────────────────────────────────────
-const Fallback = () => (
-  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'70vh', flexDirection:'column', gap:16 }}>
-    <div className="spinner" />
-    <p style={{ color:'var(--text-muted)', fontSize:14 }}>Loading...</p>
-  </div>
-);
 
 export default function App() {
   return (
-    <Router
-      future={{
-        v7_startTransition:   true,   // ← silences React Router v7 warnings
-        v7_relativeSplatPath: true,
-      }}
-    >
-      <Navbar />
-      <Suspense fallback={<Fallback />}>
-        <Routes>
-          {/* ── Public ───────────────────────────────────────────── */}
-          <Route path="/"                   element={<Welcome />} />
-          <Route path="/home"               element={<Home />} />
-          <Route path="/blood-availability" element={<BloodAvailability />} />
-          <Route path="/donation-camps"     element={<DonationCamps />} />
-          <Route path="/hospitals-public"   element={<HospitalsPublic />} />
-          <Route path="/map"                element={<MapView />} />
-          <Route path="/donor-list"         element={<DonorList />} />
-          <Route path="/about"              element={<About />} />
-          <Route path="/contact"            element={<Contact />} />
-          <Route path="/privacy"            element={<Privacy />} />
-          <Route path="/helpline"           element={<Helpline />} />
+    <Router>
+      <Routes>
+        {/* Welcome (no navbar/footer) */}
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <Welcome />
+              <VoiceAssistant />
+            </Suspense>
+          }
+        />
 
-          {/* ── Auth (public only) ───────────────────────────────── */}
-          <Route path="/login"          element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-          <Route path="/signup"         element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
-          <Route path="/forgot-password"element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
-          <Route path="/reset-password/:token" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
-          <Route path="/hospital-login" element={<PublicOnlyRoute><HospitalLogin /></PublicOnlyRoute>} />
-          <Route path="/hospital-signup"element={<PublicOnlyRoute><HospitalSignup /></PublicOnlyRoute>} />
+        {/* Auth (no footer) */}
+        <Route path="/login"           element={<Layout hideFooter><Login /></Layout>} />
+        <Route path="/signup"          element={<Layout hideFooter><Signup /></Layout>} />
+        <Route path="/forgot-password" element={<Layout hideFooter><ForgotPassword /></Layout>} />
+        <Route path="/reset-password/:token" element={<Layout hideFooter><ResetPassword /></Layout>} />
 
-          {/* ── Donor / User ─────────────────────────────────────── */}
-          <Route path="/donor-dashboard" element={<ProtectedRoute roles={['donor']}><DonorDashboard /></ProtectedRoute>} />
-          <Route path="/user-dashboard"  element={<ProtectedRoute roles={['user','donor']}><UserDashboard /></ProtectedRoute>} />
-          <Route path="/blood-request"   element={<ProtectedRoute><BloodRequest /></ProtectedRoute>} />
-          <Route path="/notifications"   element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        {/* Hospital Auth */}
+        <Route path="/hospital/login"  element={<Layout hideFooter><HospitalLogin /></Layout>} />
+        <Route path="/hospital/signup" element={<Layout hideFooter><HospitalSignup /></Layout>} />
 
-          {/* ── Hospital ─────────────────────────────────────────── */}
-          <Route path="/hospital-dashboard"  element={<ProtectedRoute roles={['hospital']}><HospitalDashboard /></ProtectedRoute>} />
-          <Route path="/hospital-blood-bank" element={<ProtectedRoute roles={['hospital']}><HospitalBloodBank /></ProtectedRoute>} />
-          <Route path="/hospital-deliveries" element={<ProtectedRoute roles={['hospital']}><HospitalDeliveries /></ProtectedRoute>} />
-          <Route path="/hospital-requests"   element={<ProtectedRoute roles={['hospital']}><HospitalRequests /></ProtectedRoute>} />
-          <Route path="/hospital-patients"   element={<ProtectedRoute roles={['hospital']}><HospitalPatients /></ProtectedRoute>} />
-          <Route path="/hospital-staff"      element={<ProtectedRoute roles={['hospital']}><HospitalStaff /></ProtectedRoute>} />
+        {/* Public pages with navbar */}
+        <Route path="/home"              element={<Layout><Home /></Layout>} />
+        <Route path="/hospitals"         element={<Layout><HospitalsPublic /></Layout>} />
+        <Route path="/blood-availability" element={<Layout><BloodAvailability /></Layout>} />
+        <Route path="/blood-request"     element={<Layout><BloodRequest /></Layout>} />
+        <Route path="/donation-camps"    element={<Layout><DonationCamps /></Layout>} />
+        <Route path="/donors"            element={<Layout><DonorList /></Layout>} />
+        <Route path="/map"               element={<Layout><MapView /></Layout>} />
+        <Route path="/about"             element={<Layout><About /></Layout>} />
+        <Route path="/contact"           element={<Layout><Contact /></Layout>} />
+        <Route path="/privacy"           element={<Layout><Privacy /></Layout>} />
+        <Route path="/helpline"          element={<Layout><Helpline /></Layout>} />
 
-          {/* ── Admin ────────────────────────────────────────────── */}
-          <Route path="/admin-dashboard"       element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/blood-stock-management"element={<ProtectedRoute roles={['admin','hospital']}><BloodStockManagement /></ProtectedRoute>} />
-          <Route path="/delivery-records"      element={<ProtectedRoute roles={['admin','hospital']}><DeliveryRecords /></ProtectedRoute>} />
-          <Route path="/analytics"             element={<ProtectedRoute roles={['admin','hospital']}><Analytics /></ProtectedRoute>} />
+        {/* Protected: Donor */}
+        <Route
+          path="/donor/dashboard"
+          element={
+            <Layout>
+              <ProtectedRoute role="donor">
+                <DonorDashboard />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
 
-          {/* ── Catch-all ────────────────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+        {/* Protected: User */}
+        <Route
+          path="/user/dashboard"
+          element={
+            <Layout>
+              <ProtectedRoute role="user">
+                <UserDashboard />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+
+        {/* Protected: Hospital */}
+        <Route
+          path="/hospital/dashboard"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalDashboard />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/hospital/blood-bank"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalBloodBank />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/hospital/deliveries"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalDeliveries />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/hospital/requests"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalRequests />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/hospital/patients"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalPatients />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/hospital/staff"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute hospitalOnly>
+                <HospitalStaff />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+
+        {/* Protected: Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <Layout hideNav>
+              <ProtectedRoute role="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/blood-stock"
+          element={
+            <Layout>
+              <ProtectedRoute role="admin">
+                <BloodStockManagement />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/deliveries"
+          element={
+            <Layout>
+              <ProtectedRoute role="admin">
+                <DeliveryRecords />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <Layout>
+              <ProtectedRoute role="admin">
+                <Analytics />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+
+        {/* Notifications (any logged-in user) */}
+        <Route
+          path="/notifications"
+          element={
+            <Layout>
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            </Layout>
+          }
+        />
+
+        {/* 404 fallback */}
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <div style={{
+                minHeight: "80vh",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Poppins', sans-serif",
+                color: "#fff",
+                background: "#0f172a",
+                textAlign: "center",
+                padding: "2rem",
+              }}>
+                <div style={{ fontSize: "4rem" }}>🩸</div>
+                <h1 style={{ fontSize: "3rem", fontWeight: 900, color: "#f87171" }}>404</h1>
+                <p style={{ opacity: 0.7 }}>Page not found</p>
+                <a href="/" style={{ marginTop: "1rem", background: "#dc2626", color: "#fff", padding: "0.75rem 2rem", borderRadius: "12px", textDecoration: "none", fontWeight: 700 }}>
+                  Go Home
+                </a>
+              </div>
+            </Layout>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
