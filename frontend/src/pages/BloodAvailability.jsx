@@ -1,392 +1,624 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './BloodAvailability.css';
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const BLOOD_TYPES = ['All', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_COLORS = {
+  "A+": { bg: "#fff0f0", border: "#ff4444", text: "#cc0000", badge: "#ff4444" },
+  "A-": { bg: "#fff5f5", border: "#ff6666", text: "#bb0000", badge: "#ff6666" },
+  "B+": { bg: "#fff8f0", border: "#ff8c00", text: "#cc6600", badge: "#ff8c00" },
+  "B-": { bg: "#fffaf0", border: "#ffa500", text: "#bb7700", badge: "#ffa500" },
+  "AB+": { bg: "#f0f8ff", border: "#4169e1", text: "#1a3a8a", badge: "#4169e1" },
+  "AB-": { bg: "#f5f8ff", border: "#5a7de8", text: "#2244aa", badge: "#5a7ae8" },
+  "O+": { bg: "#f0fff4", border: "#28a745", text: "#155724", badge: "#28a745" },
+  "O-": { bg: "#f5fff8", border: "#34b558", text: "#1a6b30", badge: "#34b558" },
+};
 
-const INDIAN_CITIES = [
-  'All Cities', 'Delhi', 'Mumbai', 'Kolkata', 'Chennai', 'Bangalore',
-  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Bhubaneswar',
-  'Lucknow', 'Chandigarh', 'Patna', 'Kochi', 'Indore',
-];
+const getStockLevel = (units) => {
+  if (units === 0) return { label: "Out of Stock", color: "#dc3545", bg: "#ffe6ea", icon: "⛔" };
+  if (units < 5) return { label: "Critical", color: "#dc3545", bg: "#ffe6ea", icon: "🔴" };
+  if (units < 15) return { label: "Low", color: "#fd7e14", bg: "#fff3e0", icon: "🟠" };
+  if (units < 30) return { label: "Moderate", color: "#ffc107", bg: "#fffde7", icon: "🟡" };
+  return { label: "Available", color: "#28a745", bg: "#e8f5e9", icon: "🟢" };
+};
 
-// Fallback demo data
-const DEMO_STOCK = [
-  { id: 1, hospital: 'AIIMS Delhi', city: 'Delhi', bloodType: 'O+', units: 45, status: 'available', distance: '2.3 km', lastUpdated: '5 min ago', contact: '011-26588500' },
-  { id: 2, hospital: 'Apollo Hospital', city: 'Delhi', bloodType: 'A+', units: 32, status: 'available', distance: '4.1 km', lastUpdated: '12 min ago', contact: '011-26092050' },
-  { id: 3, hospital: 'Safdarjung Hospital', city: 'Delhi', bloodType: 'B+', units: 8, status: 'low', distance: '6.7 km', lastUpdated: '1 hr ago', contact: '011-26707444' },
-  { id: 4, hospital: 'RML Hospital', city: 'Delhi', bloodType: 'AB+', units: 2, status: 'critical', distance: '3.5 km', lastUpdated: '30 min ago', contact: '011-23745525' },
-  { id: 5, hospital: 'NIMHANS', city: 'Bangalore', bloodType: 'O-', units: 12, status: 'available', distance: '8.2 km', lastUpdated: '20 min ago', contact: '080-46110007' },
-  { id: 6, hospital: 'KEM Hospital', city: 'Mumbai', bloodType: 'B-', units: 3, status: 'critical', distance: '1.9 km', lastUpdated: '45 min ago', contact: '022-24107000' },
-  { id: 7, hospital: 'PGI Chandigarh', city: 'Chandigarh', bloodType: 'A-', units: 19, status: 'available', distance: '12.1 km', lastUpdated: '1 hr ago', contact: '0172-2752021' },
-  { id: 8, hospital: 'SCBMCH', city: 'Bhubaneswar', bloodType: 'AB-', units: 5, status: 'low', distance: '3.0 km', lastUpdated: '10 min ago', contact: '0671-2411317' },
-  { id: 9, hospital: 'KIMS Hospital', city: 'Bhubaneswar', bloodType: 'O+', units: 22, status: 'available', distance: '5.6 km', lastUpdated: '2 hr ago', contact: '0674-3011000' },
-  { id: 10, hospital: 'Fortis Hospital', city: 'Mumbai', bloodType: 'A+', units: 0, status: 'unavailable', distance: '9.3 km', lastUpdated: '3 hr ago', contact: '022-66279999' },
-  { id: 11, hospital: 'Max Super Specialty', city: 'Delhi', bloodType: 'O+', units: 67, status: 'available', distance: '7.8 km', lastUpdated: '15 min ago', contact: '011-26515050' },
-  { id: 12, hospital: 'Manipal Hospital', city: 'Bangalore', bloodType: 'B+', units: 14, status: 'available', distance: '4.5 km', lastUpdated: '25 min ago', contact: '080-25023333' },
-];
-
-const BLOOD_SUMMARY = [
-  { type: 'O+', available: 847, hospitals: 234, status: 'available' },
-  { type: 'A+', available: 623, hospitals: 198, status: 'available' },
-  { type: 'B+', available: 412, hospitals: 167, status: 'low' },
-  { type: 'AB+', available: 98, hospitals: 87, status: 'low' },
-  { type: 'O-', available: 145, hospitals: 112, status: 'available' },
-  { type: 'A-', available: 189, hospitals: 134, status: 'available' },
-  { type: 'B-', available: 67, hospitals: 78, status: 'critical' },
-  { type: 'AB-', available: 43, hospitals: 56, status: 'critical' },
+// Mock data for when backend is unavailable
+const MOCK_STOCK_DATA = [
+  {
+    _id: "1",
+    hospital: { name: "AIIMS Bhubaneswar", address: "Sijua, Patrapada", city: "Bhubaneswar", phone: "0674-2476789", lat: 20.2961, lng: 85.8245 },
+    stocks: { "A+": 25, "A-": 8, "B+": 32, "B-": 3, "AB+": 15, "AB-": 2, "O+": 40, "O-": 6 },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    _id: "2",
+    hospital: { name: "SCB Medical College", address: "Manglabag", city: "Cuttack", phone: "0671-2414004", lat: 20.4625, lng: 85.8830 },
+    stocks: { "A+": 12, "A-": 0, "B+": 18, "B-": 1, "AB+": 7, "AB-": 0, "O+": 22, "O-": 4 },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    _id: "3",
+    hospital: { name: "Capital Hospital", address: "Unit 6", city: "Bhubaneswar", phone: "0674-2391983", lat: 20.2699, lng: 85.8387 },
+    stocks: { "A+": 5, "A-": 2, "B+": 8, "B-": 0, "AB+": 3, "AB-": 1, "O+": 10, "O-": 2 },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    _id: "4",
+    hospital: { name: "SUM Hospital", address: "K8 Kalinga Nagar", city: "Bhubaneswar", phone: "0674-2359355", lat: 20.2521, lng: 85.7954 },
+    stocks: { "A+": 0, "A-": 0, "B+": 2, "B-": 0, "AB+": 0, "AB-": 0, "O+": 4, "O-": 0 },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    _id: "5",
+    hospital: { name: "Kalinga Hospital", address: "Nayapalli", city: "Bhubaneswar", phone: "0674-2557776", lat: 20.2784, lng: 85.8137 },
+    stocks: { "A+": 35, "A-": 10, "B+": 42, "B-": 7, "AB+": 20, "AB-": 4, "O+": 55, "O-": 9 },
+    lastUpdated: new Date().toISOString(),
+  },
 ];
 
 export default function BloodAvailability() {
-  const navigate = useNavigate();
-  const [stock, setStock] = useState([]);
+  const [stockData, setStockData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedType, setSelectedType] = useState('All');
-  const [selectedCity, setSelectedCity] = useState('All Cities');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('units');
-  const [viewMode, setViewMode] = useState('grid'); // grid | table
-  const [requestModal, setRequestModal] = useState(null);
+  const [error, setError] = useState(null);
+  const [searchCity, setSearchCity] = useState("");
+  const [searchHospital, setSearchHospital] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [viewMode, setViewMode] = useState("table"); // table | cards
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [usingMock, setUsingMock] = useState(false);
 
   const fetchStock = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const params = {};
-      if (selectedType !== 'All') params.bloodType = selectedType;
-      if (selectedCity !== 'All Cities') params.city = selectedCity;
-      const res = await axios.get(`${API_BASE}/blood-stock`, { params });
-      setStock(res.data?.data || res.data || []);
-      setLastRefresh(new Date());
-    } catch (err) {
-      // Use demo data when backend not available
-      setStock(DEMO_STOCK);
-      setLastRefresh(new Date());
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/blood-stock/availability`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      setStockData(Array.isArray(data) ? data : data.data || []);
+      setUsingMock(false);
+    } catch {
+      // fallback to mock
+      setStockData(MOCK_STOCK_DATA);
+      setUsingMock(true);
     } finally {
       setLoading(false);
+      setLastRefresh(new Date());
     }
-  }, [selectedType, selectedCity]);
+  }, []);
 
-  useEffect(() => { fetchStock(); }, [fetchStock]);
-
-  // Auto refresh every 2 minutes
   useEffect(() => {
-    const interval = setInterval(fetchStock, 120000);
+    fetchStock();
+    const interval = setInterval(fetchStock, 60000);
     return () => clearInterval(interval);
   }, [fetchStock]);
 
-  // Filter + sort
-  const filtered = stock
-    .filter(item => {
-      const matchType = selectedType === 'All' || item.bloodType === selectedType;
-      const matchCity = selectedCity === 'All Cities' || item.city === selectedCity;
-      const matchStatus = selectedStatus === 'all' || item.status === selectedStatus;
-      const matchSearch = !searchQuery || 
-        item.hospital?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.bloodType?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchType && matchCity && matchStatus && matchSearch;
+  const filtered = stockData
+    .filter((item) => {
+      const city = item.hospital?.city?.toLowerCase() || "";
+      const name = item.hospital?.name?.toLowerCase() || "";
+      const cityMatch = city.includes(searchCity.toLowerCase());
+      const nameMatch = name.includes(searchHospital.toLowerCase());
+      const groupMatch =
+        selectedGroup === "all" || (item.stocks && (item.stocks[selectedGroup] ?? 0) > 0);
+      return cityMatch && nameMatch && groupMatch;
     })
     .sort((a, b) => {
-      if (sortBy === 'units') return (b.units || 0) - (a.units || 0);
-      if (sortBy === 'distance') return parseFloat(a.distance) - parseFloat(b.distance);
-      if (sortBy === 'hospital') return a.hospital?.localeCompare(b.hospital);
+      if (sortBy === "name") return (a.hospital?.name || "").localeCompare(b.hospital?.name || "");
+      if (sortBy === "city") return (a.hospital?.city || "").localeCompare(b.hospital?.city || "");
+      if (sortBy === "stock" && selectedGroup !== "all") {
+        return (b.stocks?.[selectedGroup] || 0) - (a.stocks?.[selectedGroup] || 0);
+      }
       return 0;
     });
 
-  const getStatusBadge = (status, units) => {
-    if (units === 0 || status === 'unavailable') return <span className="badge badge-danger">Unavailable</span>;
-    if (units <= 5 || status === 'critical') return <span className="badge badge-danger">Critical</span>;
-    if (units <= 15 || status === 'low') return <span className="badge badge-warning">Low Stock</span>;
-    return <span className="badge badge-success">Available</span>;
-  };
+  const totalsByGroup = BLOOD_GROUPS.reduce((acc, grp) => {
+    acc[grp] = stockData.reduce((sum, item) => sum + (item.stocks?.[grp] || 0), 0);
+    return acc;
+  }, {});
 
-  const getBloodBadgeClass = (status, units) => {
-    if (!units || units === 0) return '';
-    if (units <= 5) return 'critical';
-    if (units <= 15) return 'low';
-    return 'available';
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+      fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+      color: "#fff",
+    },
+    hero: {
+      background: "linear-gradient(135deg, #dc2626 0%, #7f1d1d 50%, #1a0505 100%)",
+      padding: "3rem 2rem 2rem",
+      textAlign: "center",
+      position: "relative",
+      overflow: "hidden",
+    },
+    heroTitle: {
+      fontSize: "clamp(2rem, 5vw, 3rem)",
+      fontWeight: 800,
+      margin: 0,
+      letterSpacing: "-0.02em",
+      textShadow: "0 2px 20px rgba(0,0,0,0.4)",
+    },
+    heroSub: {
+      opacity: 0.85,
+      fontSize: "1.1rem",
+      marginTop: "0.5rem",
+      fontWeight: 400,
+    },
+    dropBadge: {
+      display: "inline-block",
+      background: "rgba(255,255,255,0.15)",
+      backdropFilter: "blur(10px)",
+      border: "1px solid rgba(255,255,255,0.2)",
+      borderRadius: "100px",
+      padding: "0.3rem 1rem",
+      fontSize: "0.85rem",
+      marginBottom: "1rem",
+      fontWeight: 600,
+    },
+    container: { maxWidth: 1300, margin: "0 auto", padding: "2rem 1.5rem" },
+    summaryGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+      gap: "1rem",
+      marginBottom: "2rem",
+    },
+    summaryCard: (grp) => ({
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(12px)",
+      border: `2px solid ${BLOOD_COLORS[grp].badge}33`,
+      borderRadius: "16px",
+      padding: "1.2rem 0.8rem",
+      textAlign: "center",
+      cursor: "pointer",
+      transition: "all 0.25s ease",
+      outline: selectedGroup === grp ? `3px solid ${BLOOD_COLORS[grp].badge}` : "none",
+      transform: selectedGroup === grp ? "scale(1.05)" : "scale(1)",
+    }),
+    summaryGroupLabel: (grp) => ({
+      fontSize: "1.5rem",
+      fontWeight: 800,
+      color: BLOOD_COLORS[grp].badge,
+    }),
+    summaryUnits: { fontSize: "0.9rem", opacity: 0.8, marginTop: "0.2rem" },
+    controlsRow: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "1rem",
+      marginBottom: "1.5rem",
+      alignItems: "center",
+    },
+    searchInput: {
+      flex: 1,
+      minWidth: 180,
+      background: "rgba(255,255,255,0.08)",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "12px",
+      padding: "0.75rem 1.2rem",
+      color: "#fff",
+      fontSize: "0.95rem",
+      outline: "none",
+    },
+    select: {
+      background: "rgba(255,255,255,0.08)",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "12px",
+      padding: "0.75rem 1rem",
+      color: "#fff",
+      fontSize: "0.9rem",
+      cursor: "pointer",
+    },
+    viewToggle: {
+      display: "flex",
+      background: "rgba(255,255,255,0.08)",
+      borderRadius: "12px",
+      overflow: "hidden",
+      border: "1px solid rgba(255,255,255,0.15)",
+    },
+    toggleBtn: (active) => ({
+      padding: "0.6rem 1.2rem",
+      background: active ? "rgba(220,38,38,0.7)" : "transparent",
+      color: "#fff",
+      border: "none",
+      cursor: "pointer",
+      fontWeight: active ? 700 : 400,
+      transition: "all 0.2s",
+      fontSize: "0.9rem",
+    }),
+    refreshBtn: {
+      background: "rgba(220,38,38,0.6)",
+      border: "none",
+      borderRadius: "12px",
+      color: "#fff",
+      padding: "0.7rem 1.2rem",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: "0.9rem",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.4rem",
+    },
+    resultsInfo: {
+      opacity: 0.7,
+      fontSize: "0.9rem",
+      marginBottom: "1rem",
+    },
+    tableWrapper: {
+      background: "rgba(255,255,255,0.04)",
+      backdropFilter: "blur(20px)",
+      borderRadius: "20px",
+      border: "1px solid rgba(255,255,255,0.1)",
+      overflow: "auto",
+    },
+    table: {
+      width: "100%",
+      borderCollapse: "collapse",
+    },
+    th: {
+      padding: "1rem 1.2rem",
+      textAlign: "left",
+      fontSize: "0.8rem",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      opacity: 0.6,
+      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      whiteSpace: "nowrap",
+    },
+    td: {
+      padding: "1rem 1.2rem",
+      borderBottom: "1px solid rgba(255,255,255,0.04)",
+      verticalAlign: "middle",
+    },
+    hospitalName: {
+      fontWeight: 700,
+      fontSize: "1rem",
+      color: "#fff",
+    },
+    hospitalSub: {
+      fontSize: "0.8rem",
+      opacity: 0.6,
+      marginTop: "2px",
+    },
+    stockPill: (units) => {
+      const level = getStockLevel(units);
+      return {
+        display: "inline-block",
+        background: level.bg,
+        color: level.color,
+        borderRadius: "8px",
+        padding: "0.25rem 0.6rem",
+        fontSize: "0.82rem",
+        fontWeight: 700,
+        minWidth: 36,
+        textAlign: "center",
+      };
+    },
+    cardsGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+      gap: "1.5rem",
+    },
+    card: {
+      background: "rgba(255,255,255,0.06)",
+      backdropFilter: "blur(16px)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "20px",
+      padding: "1.5rem",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    },
+    cardHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: "1rem",
+    },
+    cardStockGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "0.5rem",
+    },
+    cardStockItem: (grp) => ({
+      background: BLOOD_COLORS[grp].bg,
+      border: `1px solid ${BLOOD_COLORS[grp].border}`,
+      borderRadius: "10px",
+      padding: "0.5rem",
+      textAlign: "center",
+    }),
+    cardStockLabel: (grp) => ({
+      fontSize: "0.75rem",
+      fontWeight: 800,
+      color: BLOOD_COLORS[grp].text,
+    }),
+    cardStockCount: (units) => ({
+      fontSize: "1.1rem",
+      fontWeight: 900,
+      color: getStockLevel(units).color,
+    }),
+    emptyState: {
+      textAlign: "center",
+      padding: "4rem 2rem",
+      opacity: 0.6,
+    },
+    mockBanner: {
+      background: "rgba(255, 193, 7, 0.15)",
+      border: "1px solid rgba(255, 193, 7, 0.4)",
+      borderRadius: "12px",
+      padding: "0.75rem 1.5rem",
+      marginBottom: "1.5rem",
+      fontSize: "0.9rem",
+      color: "#ffc107",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+    },
+    phoneLink: {
+      color: "#ff6b6b",
+      textDecoration: "none",
+      fontSize: "0.82rem",
+    },
+    allBtn: {
+      background: selectedGroup === "all" ? "rgba(220,38,38,0.7)" : "rgba(255,255,255,0.07)",
+      border: "2px solid rgba(220,38,38,0.4)",
+      borderRadius: "12px",
+      color: "#fff",
+      padding: "0.6rem 1.2rem",
+      cursor: "pointer",
+      fontWeight: 700,
+      fontSize: "0.9rem",
+    },
   };
 
   return (
-    <div className="blood-avail-page">
-      {/* ── HEADER ────────────────────────────────── */}
-      <div className="ba-header">
-        <div>
-          <h1 className="page-title">🩸 Blood Availability</h1>
-          <p className="page-subtitle">
-            Real-time blood stock across India · Last updated {lastRefresh.toLocaleTimeString()}
+    <div style={styles.page}>
+      {/* Hero */}
+      <div style={styles.hero}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, rgba(255,0,0,0.15) 0%, transparent 60%), radial-gradient(circle at 80% 50%, rgba(120,0,0,0.2) 0%, transparent 60%)",
+          }}
+        />
+        <div style={{ position: "relative" }}>
+          <div style={styles.dropBadge}>🩸 Live Blood Availability</div>
+          <h1 style={styles.heroTitle}>Find Blood. Save Lives.</h1>
+          <p style={styles.heroSub}>
+            Real-time blood stock across hospitals — updated every minute
+          </p>
+          <p style={{ opacity: 0.6, fontSize: "0.85rem", marginTop: "0.5rem" }}>
+            Last updated: {lastRefresh.toLocaleTimeString()}
           </p>
         </div>
-        <div className="ba-header-actions">
-          <button className="btn-outline" onClick={fetchStock} disabled={loading}>
-            {loading ? '...' : '🔄 Refresh'}
-          </button>
-          <button className="btn-primary" onClick={() => navigate('/blood-request')}>
-            + Request Blood
-          </button>
-        </div>
       </div>
 
-      {/* ── BLOOD TYPE SUMMARY CARDS ───────────────── */}
-      <div className="blood-summary-grid">
-        {BLOOD_SUMMARY.map(b => (
-          <button
-            key={b.type}
-            className={`blood-sum-card ${selectedType === b.type ? 'selected' : ''} ${b.status}`}
-            onClick={() => setSelectedType(selectedType === b.type ? 'All' : b.type)}
-          >
-            <div className={`blood-badge ${b.status}`} style={{ width: 44, height: 44, fontSize: '1rem' }}>
-              {b.type}
-            </div>
-            <div className="bsc-info">
-              <div className="bsc-units">{b.available.toLocaleString()}</div>
-              <div className="bsc-label">units · {b.hospitals} hospitals</div>
-            </div>
-            <div className={`bsc-dot ${b.status}`} />
-          </button>
-        ))}
-      </div>
-
-      {/* ── FILTERS ───────────────────────────────── */}
-      <div className="ba-filters">
-        <div className="search-wrapper" style={{ flex: 2 }}>
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="Search hospital, city or blood type..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <select className="form-select" value={selectedType} onChange={e => setSelectedType(e.target.value)}>
-          {BLOOD_TYPES.map(bt => <option key={bt} value={bt}>{bt}</option>)}
-        </select>
-
-        <select className="form-select" value={selectedCity} onChange={e => setSelectedCity(e.target.value)}>
-          {INDIAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-
-        <select className="form-select" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="available">✅ Available</option>
-          <option value="low">🟡 Low Stock</option>
-          <option value="critical">🔴 Critical</option>
-        </select>
-
-        <select className="form-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          <option value="units">Sort: Units</option>
-          <option value="distance">Sort: Distance</option>
-          <option value="hospital">Sort: Hospital</option>
-        </select>
-
-        <div className="view-toggle">
-          <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}>⊞</button>
-          <button className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')}>☰</button>
-        </div>
-      </div>
-
-      {/* ── RESULTS COUNT ─────────────────────────── */}
-      <div className="ba-results-info">
-        <span>{loading ? 'Loading...' : `${filtered.length} results found`}</span>
-        {selectedType !== 'All' && (
-          <span className="filter-tag">
-            Blood: {selectedType} <button onClick={() => setSelectedType('All')}>×</button>
-          </span>
+      <div style={styles.container}>
+        {/* Mock data banner */}
+        {usingMock && (
+          <div style={styles.mockBanner}>
+            ⚠️ Showing demo data — connect your backend for live stock updates
+          </div>
         )}
-        {selectedCity !== 'All Cities' && (
-          <span className="filter-tag">
-            City: {selectedCity} <button onClick={() => setSelectedCity('All Cities')}>×</button>
-          </span>
-        )}
-      </div>
 
-      {/* ── LOADING ───────────────────────────────── */}
-      {loading && (
-        <div className="loading-container">
-          <div className="spinner" />
-          <p className="loading-text">Fetching blood availability...</p>
-        </div>
-      )}
-
-      {/* ── GRID VIEW ─────────────────────────────── */}
-      {!loading && viewMode === 'grid' && (
-        <div className="ba-grid">
-          {filtered.length === 0 ? (
-            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-state-icon">🩸</div>
-              <h3>No results found</h3>
-              <p>Try changing the blood type, city, or search query.</p>
-              <button className="btn-primary" style={{ marginTop: 16 }}
-                onClick={() => { setSelectedType('All'); setSelectedCity('All Cities'); setSearchQuery(''); }}>
-                Clear Filters
-              </button>
-            </div>
-          ) : filtered.map(item => (
-            <div key={item.id} className="ba-card">
-              <div className="ba-card-header">
-                <div className={`blood-badge ${getBloodBadgeClass(item.status, item.units)}`}>
-                  {item.bloodType}
-                </div>
-                <div className="ba-card-hospital">
-                  <div className="ba-hospital-name">{item.hospital}</div>
-                  <div className="ba-hospital-city">📍 {item.city}</div>
-                </div>
-                {getStatusBadge(item.status, item.units)}
+        {/* Summary strip */}
+        <div style={styles.summaryGrid}>
+          <button style={styles.allBtn} onClick={() => setSelectedGroup("all")}>
+            All Groups
+          </button>
+          {BLOOD_GROUPS.map((grp) => (
+            <div
+              key={grp}
+              style={styles.summaryCard(grp)}
+              onClick={() => setSelectedGroup(selectedGroup === grp ? "all" : grp)}
+              title={`Click to filter by ${grp}`}
+            >
+              <div style={styles.summaryGroupLabel(grp)}>{grp}</div>
+              <div style={styles.summaryUnits}>
+                {loading ? "..." : `${totalsByGroup[grp]} units`}
               </div>
-
-              <div className="ba-card-stats">
-                <div className="ba-stat">
-                  <div className="ba-stat-val">{item.units || 0}</div>
-                  <div className="ba-stat-label">Units Available</div>
-                </div>
-                <div className="ba-stat-divider" />
-                <div className="ba-stat">
-                  <div className="ba-stat-val">{item.distance || 'N/A'}</div>
-                  <div className="ba-stat-label">Distance</div>
-                </div>
-              </div>
-
-              {/* Units bar */}
-              <div className="units-bar-wrap">
-                <div className="units-bar-fill"
-                  style={{
-                    width: `${Math.min((item.units / 50) * 100, 100)}%`,
-                    background: item.units <= 5 ? 'linear-gradient(90deg,#ef4444,#dc2626)' :
-                                item.units <= 15 ? 'linear-gradient(90deg,#f59e0b,#d97706)' :
-                                'linear-gradient(90deg,#22c55e,#16a34a)'
-                  }}
-                />
-              </div>
-
-              <div className="ba-card-footer">
-                <span className="ba-updated">🕐 {item.lastUpdated}</span>
-                <div className="ba-actions">
-                  <button className="btn-ghost" style={{ fontSize: '12px', padding: '6px 12px' }}
-                    onClick={() => window.open(`tel:${item.contact}`)}>
-                    📞 Call
-                  </button>
-                  <button className="btn-primary" style={{ fontSize: '12px', padding: '6px 14px' }}
-                    onClick={() => setRequestModal(item)}>
-                    Request
-                  </button>
-                </div>
+              <div style={{ fontSize: "0.7rem", marginTop: "0.3rem", opacity: 0.7 }}>
+                {!loading && getStockLevel(totalsByGroup[grp]).icon}
               </div>
             </div>
           ))}
         </div>
-      )}
 
-      {/* ── TABLE VIEW ────────────────────────────── */}
-      {!loading && viewMode === 'table' && (
-        <div className="table-container">
-          {filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">🩸</div>
-              <h3>No blood stock found</h3>
-              <p>Adjust your filters to see results.</p>
-            </div>
-          ) : (
-            <table className="data-table">
+        {/* Controls */}
+        <div style={styles.controlsRow}>
+          <input
+            style={styles.searchInput}
+            placeholder="🔍 Search by hospital name..."
+            value={searchHospital}
+            onChange={(e) => setSearchHospital(e.target.value)}
+          />
+          <input
+            style={styles.searchInput}
+            placeholder="📍 Filter by city..."
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
+          />
+          <select
+            style={styles.select}
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+          >
+            <option value="all">All Blood Groups</option>
+            {BLOOD_GROUPS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+          <select style={styles.select} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="name">Sort: Name</option>
+            <option value="city">Sort: City</option>
+            {selectedGroup !== "all" && <option value="stock">Sort: Stock</option>}
+          </select>
+          <div style={styles.viewToggle}>
+            <button style={styles.toggleBtn(viewMode === "table")} onClick={() => setViewMode("table")}>
+              ☰ Table
+            </button>
+            <button style={styles.toggleBtn(viewMode === "cards")} onClick={() => setViewMode("cards")}>
+              ⊞ Cards
+            </button>
+          </div>
+          <button style={styles.refreshBtn} onClick={fetchStock} disabled={loading}>
+            {loading ? "⏳" : "🔄"} Refresh
+          </button>
+        </div>
+
+        <p style={styles.resultsInfo}>
+          Showing <strong>{filtered.length}</strong> of {stockData.length} hospitals
+          {selectedGroup !== "all" && ` with ${selectedGroup} blood`}
+        </p>
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "4rem", fontSize: "1.2rem" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🩸</div>
+            Fetching live blood stock...
+          </div>
+        )}
+
+        {/* Table View */}
+        {!loading && viewMode === "table" && (
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
               <thead>
                 <tr>
-                  <th>Blood Type</th>
-                  <th>Hospital</th>
-                  <th>City</th>
-                  <th>Units</th>
-                  <th>Distance</th>
-                  <th>Status</th>
-                  <th>Updated</th>
-                  <th>Action</th>
+                  <th style={styles.th}>Hospital</th>
+                  <th style={styles.th}>Location</th>
+                  <th style={styles.th}>Contact</th>
+                  {BLOOD_GROUPS.map((g) => (
+                    <th
+                      key={g}
+                      style={{
+                        ...styles.th,
+                        color: selectedGroup === g ? BLOOD_COLORS[g].badge : undefined,
+                      }}
+                    >
+                      {g}
+                    </th>
+                  ))}
+                  <th style={styles.th}>Updated</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(item => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className={`blood-badge ${getBloodBadgeClass(item.status, item.units)}`}
-                        style={{ width: 36, height: 36, fontSize: '0.8rem' }}>
-                        {item.bloodType}
-                      </div>
-                    </td>
-                    <td><strong>{item.hospital}</strong></td>
-                    <td>{item.city}</td>
-                    <td>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600,
-                        color: item.units <= 5 ? 'var(--danger)' : item.units <= 15 ? 'var(--warning)' : 'var(--success)' }}>
-                        {item.units}
-                      </span>
-                    </td>
-                    <td>{item.distance}</td>
-                    <td>{getStatusBadge(item.status, item.units)}</td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.lastUpdated}</td>
-                    <td>
-                      <button className="btn-primary" style={{ fontSize: '12px', padding: '6px 14px' }}
-                        onClick={() => setRequestModal(item)}>
-                        Request
-                      </button>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} style={{ ...styles.td, textAlign: "center", padding: "3rem", opacity: 0.5 }}>
+                      No hospitals match your search
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map((item) => (
+                    <tr key={item._id} style={{ transition: "background 0.2s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <td style={styles.td}>
+                        <div style={styles.hospitalName}>{item.hospital?.name}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ fontSize: "0.85rem" }}>{item.hospital?.city}</div>
+                        <div style={styles.hospitalSub}>{item.hospital?.address}</div>
+                      </td>
+                      <td style={styles.td}>
+                        {item.hospital?.phone && (
+                          <a href={`tel:${item.hospital.phone}`} style={styles.phoneLink}>
+                            📞 {item.hospital.phone}
+                          </a>
+                        )}
+                      </td>
+                      {BLOOD_GROUPS.map((g) => {
+                        const units = item.stocks?.[g] ?? 0;
+                        return (
+                          <td key={g} style={styles.td}>
+                            <span style={styles.stockPill(units)}>{units}</span>
+                          </td>
+                        );
+                      })}
+                      <td style={{ ...styles.td, fontSize: "0.8rem", opacity: 0.6 }}>
+                        {item.lastUpdated
+                          ? new Date(item.lastUpdated).toLocaleTimeString()
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-          )}
-        </div>
-      )}
-
-      {/* ── REQUEST MODAL ─────────────────────────── */}
-      {requestModal && (
-        <div className="modal-overlay" onClick={() => setRequestModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Request Blood</h2>
-              <button className="modal-close" onClick={() => setRequestModal(null)}>×</button>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24,
-              background: 'rgba(227,27,35,0.07)', borderRadius: 12, padding: 16, border: '1px solid var(--border-red)' }}>
-              <div className="blood-badge">{requestModal.bloodType}</div>
-              <div>
-                <div style={{ fontWeight: 700 }}>{requestModal.hospital}</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{requestModal.city} · {requestModal.distance}</div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{requestModal.units} units available</div>
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Patient Name</label>
-              <input className="form-input" placeholder="Enter patient name" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Units Required</label>
-              <input className="form-input" type="number" min={1} max={requestModal.units} placeholder="e.g. 2" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Contact Number</label>
-              <input className="form-input" placeholder="+91 98765 43210" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Urgency</label>
-              <select className="form-select">
-                <option>Normal</option>
-                <option>Urgent (within 24hrs)</option>
-                <option>Emergency (within 2hrs)</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setRequestModal(null)}>Cancel</button>
-              <button className="btn-primary" style={{ flex: 2 }}
-                onClick={() => { navigate('/blood-request'); setRequestModal(null); }}>
-                Submit Request →
-              </button>
-            </div>
           </div>
+        )}
+
+        {/* Cards View */}
+        {!loading && viewMode === "cards" && (
+          <div style={styles.cardsGrid}>
+            {filtered.length === 0 ? (
+              <div style={styles.emptyState}>
+                <div style={{ fontSize: "3rem" }}>🩸</div>
+                <p>No hospitals found matching your criteria</p>
+              </div>
+            ) : (
+              filtered.map((item) => (
+                <div key={item._id} style={styles.card}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <div style={styles.cardHeader}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.3 }}>
+                        {item.hospital?.name}
+                      </div>
+                      <div style={{ opacity: 0.6, fontSize: "0.8rem", marginTop: "2px" }}>
+                        📍 {item.hospital?.city}
+                        {item.hospital?.address && `, ${item.hospital.address}`}
+                      </div>
+                      {item.hospital?.phone && (
+                        <a href={`tel:${item.hospital.phone}`} style={{ ...styles.phoneLink, display: "block", marginTop: "4px" }}>
+                          📞 {item.hospital.phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div style={styles.cardStockGrid}>
+                    {BLOOD_GROUPS.map((grp) => {
+                      const units = item.stocks?.[grp] ?? 0;
+                      const level = getStockLevel(units);
+                      return (
+                        <div key={grp} style={styles.cardStockItem(grp)}>
+                          <div style={styles.cardStockLabel(grp)}>{grp}</div>
+                          <div style={styles.cardStockCount(units)}>{units}</div>
+                          <div style={{ fontSize: "0.6rem", color: level.color }}>{level.icon}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ marginTop: "0.8rem", fontSize: "0.75rem", opacity: 0.5 }}>
+                    Updated: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleString() : "N/A"}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Legend */}
+        <div style={{ marginTop: "2rem", display: "flex", gap: "1.5rem", flexWrap: "wrap", opacity: 0.7, fontSize: "0.85rem" }}>
+          <span>Stock Legend:</span>
+          {[["🟢", "30+ units", "Available"], ["🟡", "15–29", "Moderate"], ["🟠", "5–14", "Low"], ["🔴", "1–4", "Critical"], ["⛔", "0", "Out of Stock"]].map(([icon, range, label]) => (
+            <span key={label}>{icon} {label} ({range})</span>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
