@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
+
 const {
-  getBloodStats,
-  getDonationTrends,
-  getHospitalStats,
-  getRequestStats,
-  getGeographicStats
+  getOverview,
+  getBloodTrends,
+  getDonorAnalytics,
+  getCampAnalytics,
+  getHospitalAnalytics
 } = require('../controllers/analyticsController');
 
-router.get('/blood-stats', getBloodStats);
-router.get('/donation-trends', getDonationTrends);
-router.get('/hospital-stats', getHospitalStats);
-router.get('/request-stats', getRequestStats);
-router.get('/geographic', getGeographicStats);
+router.get('/overview', getOverview);
+router.get('/blood-trends', getBloodTrends);
+router.get('/donors', getDonorAnalytics);
+router.get('/camps', getCampAnalytics);
+router.get('/hospitals', getHospitalAnalytics);
 
 module.exports = router;

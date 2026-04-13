@@ -74,7 +74,12 @@ exports.registerHospital = async (req, res) => {
       operatingHours,
       emergencyContact,
       website,
-      managedBy: hospitalUser._id
+      managedBy: hospitalUser._id,
+      bloodAvailability: [
+      { bloodGroup: "A+", unitsAvailable: 10 },
+      { bloodGroup: "B+", unitsAvailable: 5 },
+      { bloodGroup: "O+", unitsAvailable: 20 }
+    ],
     });
 
     const token = generateToken(hospitalUser._id);

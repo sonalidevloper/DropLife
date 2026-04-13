@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/availability', (req, res) => {
-  res.json({ data: [] });
+router.post('/', (req, res) => {
+  res.json({ message: 'Upload API working' });
 });
 
 module.exports = router;

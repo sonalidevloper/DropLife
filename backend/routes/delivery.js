@@ -1,22 +1,29 @@
 const express = require('express');
 const router = express.Router();
+
 const {
   createDelivery,
-  getAllDeliveries,
-  getMyDeliveries,
-  getDeliveryById,
+  getDeliveries,
+  getDelivery,
   updateDeliveryStatus,
-  cancelDelivery,
-  getHospitalDeliveries
+  trackDelivery,
+  deleteDelivery
 } = require('../controllers/deliveryController');
+
 const { protect, authorize } = require('../middleware/auth');
 
+// Public tracking (no auth needed)
+router.get('/track/:trackingId', trackDelivery);
+
+// Authenticated routes
 router.post('/', protect, authorize('hospital', 'admin'), createDelivery);
-router.get('/', protect, authorize('admin'), getAllDeliveries);
-router.get('/my', protect, getMyDeliveries);
-router.get('/hospital/:hospitalId', protect, authorize('hospital', 'admin'), getHospitalDeliveries);
-router.get('/:id', protect, getDeliveryById);
+
+router.get('/', protect, authorize('admin'), getDeliveries);
+
+router.get('/:id', protect, getDelivery);
+
 router.put('/:id/status', protect, authorize('admin'), updateDeliveryStatus);
-router.put('/:id/cancel', protect, cancelDelivery);
+
+router.delete('/:id', protect, authorize('admin'), deleteDelivery);
 
 module.exports = router;

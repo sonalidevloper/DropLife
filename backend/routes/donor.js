@@ -13,6 +13,6 @@ router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/availability', protect, updateAvailability);
 router.get('/history', protect, getDonationHistory);
-router.get('/nearby', protect, authorize('admin'), getNearbyDonors);
+router.get('/nearby', getNearbyDonors);
 
 module.exports = router;

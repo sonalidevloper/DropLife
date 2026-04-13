@@ -15,7 +15,7 @@ const generateToken = (id) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone, address, location } = req.body;
+    const { name, email, password, phone, bloodGroup, dateOfBirth, gender, address, location } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -27,6 +27,9 @@ exports.registerUser = async (req, res) => {
       email,
       password,
       phone,
+      bloodGroup, 
+      dateOfBirth, 
+      gender,
       role: 'user',
       address,
       location: {
@@ -44,6 +47,7 @@ exports.registerUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        bloodGroup: user.bloodGroup,
         role: user.role
       }
     });

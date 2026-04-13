@@ -38,4 +38,17 @@ router.get('/:id/deliveries', protect, authorize('hospital', 'admin'), getHospit
 router.put('/:id/verify', protect, authorize('admin'), verifyHospital);
 router.delete('/:id', protect, authorize('admin'), deleteHospital);
 
+router.get('/profile/me', protect, async (req, res) => {
+  try {
+    const hospital = await Hospital.findById(req.user.id);
+
+    res.json({
+      success: true,
+      data: hospital
+    });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;

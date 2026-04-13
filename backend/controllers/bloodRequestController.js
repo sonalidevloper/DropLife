@@ -46,7 +46,7 @@ exports.createBloodRequest = async (req, res) => {
         $near: {
           $geometry: {
             type: 'Point',
-            coordinates: hospital.location.coordinates
+            coordinates: hospital?.location?.coordinates || [0, 0]
           },
           $maxDistance: 50000 // 50km radius
         }
@@ -56,7 +56,7 @@ exports.createBloodRequest = async (req, res) => {
     // Calculate distance and notify donors
     const matchedDonors = donors.map(donor => {
       const distance = calculateDistance(
-        hospital.location.coordinates,
+        hospital?.location?.coordinates || [0, 0],
         donor.location.coordinates
       );
 
