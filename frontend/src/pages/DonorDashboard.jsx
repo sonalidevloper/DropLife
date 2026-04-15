@@ -1,272 +1,437 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  Container, Row, Col, Card, Button, Badge, Form, Modal
+} from 'react-bootstrap';
+import {
+  FaTint, FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle,
+  FaBell, FaCamera, FaMap
+} from 'react-icons/fa';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './DonorDashboard.css';
+import api from '../services/api';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
+import './Dashboard.css';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Fix leaflet default icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconUrl, shadowUrl: iconShadow });
 
-const DEMO_HISTORY = [
-  { id:1, date:'Nov 15, 2025', hospital:'AIIMS Delhi',        bloodType:'O+', units:1, certificate:true },
-  { id:2, date:'Aug 20, 2025', hospital:'Safdarjung Hospital', bloodType:'O+', units:1, certificate:true },
-  { id:3, date:'May 5, 2025',  hospital:'Apollo Hospital',     bloodType:'O+', units:1, certificate:true },
-  { id:4, date:'Jan 10, 2025', hospital:'AIIMS Delhi',         bloodType:'O+', units:1, certificate:true },
-];
+const DonorDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
+  const [profile, setProfile] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [bloodRequests, setBloodRequests] = useState([]);
+  const [showMap, setShowMap] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
-export default function DonorDashboard() {
-  const { user } = useSelector(s => s.auth);
-  const navigate  = useNavigate();
-  const [history, setHistory] = useState(DEMO_HISTORY);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState({
-    totalDonations: 4,
-    lastDonation:   'Nov 15, 2025',
-    nextEligible:   'Feb 15, 2026',
-    livesSaved:     12,
-    bloodGroup:     user?.bloodGroup || 'O+',
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        // ── FIXED: /api/donor/profile  (singular, matches routes/donor.js) ──
-        const res = await axios.get(`${API_BASE}/donor/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data?.data) {
-          const d = res.data.data;
-          setStats({
-            totalDonations: d.donationCount    || 4,
-            lastDonation:   d.lastDonationDate
-              ? new Date(d.lastDonationDate).toLocaleDateString('en-IN',{ day:'numeric',month:'short',year:'numeric' })
-              : 'Nov 15, 2025',
-            nextEligible: d.nextEligibleDate
-              ? new Date(d.nextEligibleDate).toLocaleDateString('en-IN',{ day:'numeric',month:'short',year:'numeric' })
-              : 'Feb 15, 2026',
-            livesSaved: (d.donationCount || 4) * 3,
-            bloodGroup: d.bloodGroup || 'O+',
-          });
-          if (d.donationHistory?.length) setHistory(d.donationHistory);
-        }
-      } catch { /* fallback to demo data */ }
-    };
-    fetchData();
+  const fetchProfile = useCallback(async () => {
+    try {
+      const response = await api.get('/donor/profile');
+      setProfile(response.data.data);
+      setIsAvailable(response.data.data.isAvailable);
+    } catch {
+      toast.error('Failed to fetch profile');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const daysUntilEligible = () => {
-    const diff = Math.ceil((new Date(stats.nextEligible) - new Date()) / 86400000);
-    return diff > 0 ? diff : 0;
+  const fetchBloodRequests = useCallback(async () => {
+    try {
+      const response = await api.get('/blood-request?status=Open');
+      setBloodRequests(response.data.data || []);
+    } catch {
+      // Silently ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+    fetchBloodRequests();
+  }, [fetchProfile, fetchBloodRequests]);
+
+  const handleAvailabilityToggle = async () => {
+    try {
+      const response = await api.put('/donor/availability', {
+        isAvailable: !isAvailable
+      });
+      setIsAvailable(!isAvailable);
+      toast.success(response.data.message);
+    } catch {
+      toast.error('Failed to update availability');
+    }
   };
 
-  const TABS = ['overview','history','requests','achievements'];
+  const handleRespondToRequest = async (requestId, response) => {
+    try {
+      await api.put(`/blood-request/${requestId}/respond`, { response });
+      toast.success(`You have ${response.toLowerCase()} the blood request`);
+      fetchBloodRequests();
+    } catch {
+      toast.error('Failed to respond to request');
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('File size must be under 5 MB'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedFile) { toast.error('Select an image first'); return; }
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      const uploadRes = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      await api.put('/donor/profile-image', { imageUrl: uploadRes.data.data.url });
+      toast.success('Profile picture updated!');
+      setShowImageModal(false);
+      fetchProfile();
+    } catch {
+      toast.error('Upload failed');
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
+  const canDonate = profile?.lastDonationDate
+    ? Math.floor((Date.now() - new Date(profile.lastDonationDate).getTime()) / 86400000) >= 90
+    : true;
+
+  const donorCoords = profile?.location?.coordinates;
+  const mapCenter = donorCoords && donorCoords[0] !== 0
+    ? [donorCoords[1], donorCoords[0]]
+    : [20.2961, 85.8245];
 
   return (
-    <div className="donor-dashboard">
-      {/* ── Profile header ────────────────────────────────── */}
-      <div className="donor-profile-header">
-        <div className="donor-bg-effect" />
-        <div className="donor-avatar-section">
-          <div className="donor-avatar">
-            {user?.name?.charAt(0)?.toUpperCase() || 'D'}
-          </div>
-          <div className="donor-info">
-            <h1 className="donor-name">{user?.name || 'Donor'}</h1>
-            <div className="donor-meta">
-              <span className="badge badge-red">🩸 Active Donor</span>
-              <span style={{ color:'var(--text-muted)', fontSize:13 }}>📧 {user?.email}</span>
-              <span style={{ color:'var(--text-muted)', fontSize:13 }}>📍 {user?.city || 'India'}</span>
+    <div className="dashboard-page">
+      <Container className="py-5">
+        {/* Header */}
+        <Row className="mb-4">
+          <Col>
+            <div className="dashboard-header">
+              <h2 className="fw-bold">
+                Welcome back, {user?.name}! <FaTint className="text-danger" />
+              </h2>
+              <p className="text-muted">Thank you for being a lifesaver</p>
             </div>
-          </div>
-          <div className="donor-blood-badge">
-            <div className="blood-badge animate-glow" style={{ width:64, height:64, fontSize:'1.3rem' }}>
-              {stats.bloodGroup}
-            </div>
-            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:6, textAlign:'center' }}>Blood Group</div>
-          </div>
-        </div>
-      </div>
+          </Col>
+        </Row>
 
-      {/* ── Stats row ─────────────────────────────────────── */}
-      <div className="donor-stats-row">
-        {[
-          { icon:'🩸', val:stats.totalDonations, label:'Total Donations', sub:'lifetime'        },
-          { icon:'❤️', val:stats.livesSaved,     label:'Lives Saved',     sub:'estimated'       },
-          { icon:'📅', val:stats.lastDonation,   label:'Last Donation',   sub:'date'            },
-          { icon:'⏳', val:`${daysUntilEligible()} days`, label:'Next Eligible', sub:stats.nextEligible },
-        ].map((s,i)=>(
-          <div key={i} className="stat-card">
-            <div className="stat-icon">{s.icon}</div>
-            <div className="stat-value" style={{ fontSize: typeof s.val==='string'&&s.val.length>5?'1.4rem':'2.4rem' }}>
-              {s.val}
-            </div>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-change up">↑ {s.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Tabs ──────────────────────────────────────────── */}
-      <div className="donor-tabs">
-        {TABS.map(t=>(
-          <button key={t} className={`donor-tab ${activeTab===t?'active':''}`} onClick={()=>setActiveTab(t)}>
-            {t.charAt(0).toUpperCase()+t.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Overview ──────────────────────────────────────── */}
-      {activeTab==='overview' && (
-        <div className="donor-tab-content animate-fadeInUp">
-          <div className="grid-2">
-            <div className="card">
-              <h3 style={{ marginBottom:20, fontWeight:700 }}>🔥 Donation Streak</h3>
-              <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-                <div style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:'var(--font-display)', fontSize:'4rem', color:'var(--red-light)', lineHeight:1 }}>
-                    {stats.totalDonations}
+        <Row>
+          {/* ── Profile Card ─────────────────────────────────── */}
+          <Col md={4} className="mb-4">
+            <Card className="dashboard-card h-100 shadow">
+              <Card.Body>
+                <div className="text-center mb-3">
+                  {/* Profile image */}
+                  <div
+                    className="profile-avatar mb-2"
+                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                    onClick={() => setShowImageModal(true)}
+                  >
+                    {profile?.profileImage &&
+                    profile.profileImage !== 'https://res.cloudinary.com/demo/image/upload/avatar.jpg' ? (
+                      <img
+                        src={profile.profileImage}
+                        alt="Profile"
+                        style={{
+                          width: '100px', height: '100px',
+                          borderRadius: '50%', objectFit: 'cover',
+                          border: '3px solid #dc3545'
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '100px', height: '100px', borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          margin: '0 auto'
+                        }}
+                      >
+                        <FaTint size={40} className="text-white" />
+                      </div>
+                    )}
+                    <span
+                      style={{
+                        position: 'absolute', bottom: 0, right: 0,
+                        background: '#dc3545', borderRadius: '50%',
+                        width: 26, height: 26, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      <FaCamera size={12} className="text-white" />
+                    </span>
                   </div>
-                  <div style={{ color:'var(--text-muted)', fontSize:13 }}>donations</div>
+
+                  <h4 className="fw-bold mt-2">{profile?.name}</h4>
+                  <Badge bg="danger" style={{ fontSize: '1.1rem' }}>
+                    {profile?.bloodGroup}
+                  </Badge>
+                  <p className="text-muted mb-0 mt-1">{profile?.email}</p>
+                  <p className="text-muted">{profile?.phone}</p>
                 </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ marginBottom:12 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:6 }}>
-                      <span style={{ color:'var(--text-secondary)' }}>Progress to next badge</span>
-                      <span style={{ color:'var(--red-light)' }}>{stats.totalDonations}/5</span>
-                    </div>
-                    <div className="progress-bar-wrap">
-                      <div className="progress-bar-fill red" style={{ width:`${(stats.totalDonations/5)*100}%` }}/>
-                    </div>
+
+                {/* Availability toggle */}
+                <div
+                  className="availability-toggle"
+                  style={{
+                    background: '#f8f9fa', padding: '12px',
+                    borderRadius: '10px', textAlign: 'center'
+                  }}
+                >
+                  <Form.Check
+                    type="switch"
+                    id="availability-switch"
+                    label={isAvailable ? '✅ Available to Donate' : '❌ Not Available'}
+                    checked={isAvailable}
+                    onChange={handleAvailabilityToggle}
+                  />
+                </div>
+
+                <hr />
+
+                <div className="donor-stats">
+                  <div className="stat-item mb-2">
+                    <FaCalendarAlt className="me-2 text-danger" />
+                    <strong>Donations:</strong> {profile?.donationCount || 0}
                   </div>
-                  <p style={{ color:'var(--text-muted)', fontSize:13, lineHeight:1.5 }}>
-                    🏆 {5-stats.totalDonations} more donation{5-stats.totalDonations!==1?'s':''} to unlock <strong style={{ color:'var(--text-primary)' }}>Gold Donor</strong> badge!
+                  <div className="stat-item mb-2">
+                    <FaMapMarkerAlt className="me-2 text-danger" />
+                    <strong>Location:</strong> {profile?.address?.city}, {profile?.address?.state}
+                  </div>
+                  {profile?.lastDonationDate && (
+                    <div className="stat-item mb-2">
+                      <FaCheckCircle className="me-2 text-success" />
+                      <strong>Last Donation:</strong>{' '}
+                      {new Date(profile.lastDonationDate).toLocaleDateString()}
+                    </div>
+                  )}
+                  <div className={`stat-item ${canDonate ? 'text-success' : 'text-warning'}`}>
+                    <strong>
+                      {canDonate ? '✅ Eligible to Donate' : '⏳ Wait 90 days'}
+                    </strong>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* ── Blood Requests ────────────────────────────────── */}
+          <Col md={8} className="mb-4">
+            <Card className="dashboard-card shadow">
+              <Card.Header className="bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">
+                  <FaBell className="me-2" />Active Blood Requests
+                </h5>
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => setShowMap(!showMap)}
+                >
+                  <FaMap className="me-1" />
+                  {showMap ? 'Hide Map' : 'Show on Map'}
+                </Button>
+              </Card.Header>
+
+              {/* Map toggle */}
+              {showMap && (
+                <div style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <MapContainer
+                    center={mapCenter}
+                    zoom={11}
+                    style={{ height: '280px', width: '100%' }}
+                    scrollWheelZoom
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Circle
+                      center={mapCenter}
+                      radius={50000}
+                      pathOptions={{
+                        color: '#dc3545', fillColor: '#dc3545', fillOpacity: 0.07
+                      }}
+                    />
+                    {bloodRequests.map((req) => {
+                      const coords = req.hospital?.location?.coordinates;
+                      if (!coords || (coords[0] === 0 && coords[1] === 0)) return null;
+                      return (
+                        <Marker key={req._id} position={[coords[1], coords[0]]}>
+                          <Popup>
+                            <strong>{req.hospital.name}</strong><br />
+                            Patient: {req.patientName}<br />
+                            Blood: <Badge bg="danger">{req.bloodGroup}</Badge><br />
+                            Urgency: {req.urgency}
+                          </Popup>
+                        </Marker>
+                      );
+                    })}
+                  </MapContainer>
+                </div>
+              )}
+
+              <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {bloodRequests.length === 0 ? (
+                  <p className="text-center text-muted py-4">
+                    No active blood requests at the moment
                   </p>
-                </div>
-              </div>
-            </div>
+                ) : (
+                  bloodRequests.map((request) => (
+                    <Card
+                      key={request._id}
+                      className="mb-3 border-start border-danger border-4"
+                    >
+                      <Card.Body>
+                        <Row className="align-items-center">
+                          <Col md={8}>
+                            <h5 className="fw-bold">{request.patientName}</h5>
+                            <p className="mb-1">
+                              <Badge bg="danger">{request.bloodGroup}</Badge>{' '}
+                              <Badge
+                                bg={request.urgency === 'Critical' ? 'danger' : 'warning'}
+                              >
+                                {request.urgency}
+                              </Badge>
+                            </p>
+                            <p className="mb-1">
+                              <strong>Units:</strong> {request.unitsRequired}
+                            </p>
+                            <p className="mb-1">
+                              <strong>Hospital:</strong> {request.hospital?.name}
+                            </p>
+                            <p className="mb-1 text-muted" style={{ fontSize: '0.85rem' }}>
+                              <FaMapMarkerAlt className="me-1" />
+                              {request.hospital?.address}
+                            </p>
+                            <p className="mb-0 text-muted" style={{ fontSize: '0.85rem' }}>
+                              <strong>Contact:</strong> {request.requesterName} —{' '}
+                              {request.requesterPhone}
+                            </p>
+                          </Col>
+                          <Col md={4} className="text-end">
+                            <Button
+                              variant="success"
+                              size="sm"
+                              className="mb-2 d-block ms-auto"
+                              onClick={() => handleRespondToRequest(request._id, 'Accepted')}
+                              disabled={!canDonate}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              className="d-block ms-auto"
+                              onClick={() => handleRespondToRequest(request._id, 'Declined')}
+                            >
+                              Decline
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
+                  ))
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-            <div className="card">
-              <h3 style={{ marginBottom:20, fontWeight:700 }}>⚡ Quick Actions</h3>
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {[
-                  { icon:'🩸', label:'Schedule Donation',  to:'/donation-camps' },
-                  { icon:'📋', label:'Request Blood',       to:'/blood-request'  },
-                  { icon:'🔔', label:'SOS Alert Nearby',    to:'/notifications'  },
-                  { icon:'📍', label:'Find Donation Camp',  to:'/map'            },
-                ].map((a,i)=>(
-                  <button key={i} className="quick-action-btn" onClick={()=>navigate(a.to)}>
-                    <span style={{ fontSize:20 }}>{a.icon}</span>
-                    <span>{a.label}</span>
-                    <span style={{ marginLeft:'auto', color:'var(--text-muted)' }}>→</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* ── Quick stats row ───────────────────────────────────── */}
+        <Row>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-primary text-white shadow text-center p-3">
+              <h3>{profile?.donationCount || 0}</h3>
+              <p className="mb-0">Total Donations</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-success text-white shadow text-center p-3">
+              <h3>{(profile?.donationCount || 0) * 3}</h3>
+              <p className="mb-0">Lives Saved</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-warning text-white shadow text-center p-3">
+              <h3>{bloodRequests.length}</h3>
+              <p className="mb-0">Active Requests</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-danger text-white shadow text-center p-3">
+              <h3>{profile?.bloodGroup}</h3>
+              <p className="mb-0">Blood Group</p>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
 
-      {/* ── History ───────────────────────────────────────── */}
-      {activeTab==='history' && (
-        <div className="donor-tab-content animate-fadeInUp">
-          <div className="table-container">
-            {history.length===0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">🩸</div>
-                <h3>No donations yet</h3>
-                <p>Your donation history will appear here once you donate.</p>
-                <button className="btn-primary" style={{ marginTop:16 }} onClick={()=>navigate('/donation-camps')}>
-                  Find a Donation Camp
-                </button>
-              </div>
-            ) : (
-              <table className="data-table">
-                <thead>
-                  <tr><th>#</th><th>Date</th><th>Hospital</th><th>Blood Type</th><th>Units</th><th>Certificate</th></tr>
-                </thead>
-                <tbody>
-                  {history.map((h,i)=>(
-                    <tr key={h.id||i}>
-                      <td style={{ color:'var(--text-muted)', fontSize:12 }}>{i+1}</td>
-                      <td style={{ color:'var(--text-secondary)' }}>{h.date}</td>
-                      <td><strong>{h.hospital}</strong></td>
-                      <td>
-                        <div className="blood-badge" style={{ width:32, height:32, fontSize:'0.7rem' }}>{h.bloodType}</div>
-                      </td>
-                      <td>{h.units}</td>
-                      <td>
-                        {h.certificate
-                          ? <button className="btn-ghost" style={{ fontSize:'12px', padding:'5px 12px', color:'var(--info)' }}>📄 Download</button>
-                          : <span style={{ color:'var(--text-muted)', fontSize:12 }}>—</span>
-                        }
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Requests ──────────────────────────────────────── */}
-      {activeTab==='requests' && (
-        <div className="donor-tab-content animate-fadeInUp">
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
-            <div>
-              <h3 style={{ fontWeight:700, marginBottom:4 }}>Active Blood Requests</h3>
-              <p style={{ color:'var(--text-muted)', fontSize:13 }}>Requests matching your blood type near you</p>
-            </div>
-            <button className="btn-primary" onClick={()=>navigate('/blood-request')}>+ New Request</button>
-          </div>
-          <div className="requests-list">
-            {[
-              { type:'O+', hospital:'AIIMS Delhi',     urgency:'Urgent',    time:'10 min ago', distance:'3.2 km' },
-              { type:'O+', hospital:'Max Hospital',    urgency:'Normal',    time:'30 min ago', distance:'5.8 km' },
-              { type:'O-', hospital:'Apollo Hospital', urgency:'Emergency', time:'5 min ago',  distance:'7.1 km' },
-            ].map((r,i)=>(
-              <div key={i} className="request-card">
-                <div className="blood-badge" style={{ width:44, height:44, fontSize:'0.9rem' }}>{r.type}</div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:700, fontSize:14 }}>{r.hospital}</div>
-                  <div style={{ color:'var(--text-muted)', fontSize:12, marginTop:2 }}>📍 {r.distance} · {r.time}</div>
-                </div>
-                <div style={{ display:'flex', flexDirection:'column', gap:6, alignItems:'flex-end' }}>
-                  <span className={`badge ${r.urgency==='Emergency'?'badge-danger':r.urgency==='Urgent'?'badge-warning':'badge-info'}`}>{r.urgency}</span>
-                  <button className="btn-primary" style={{ fontSize:'12px', padding:'6px 14px' }}>Respond</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Achievements ──────────────────────────────────── */}
-      {activeTab==='achievements' && (
-        <div className="donor-tab-content animate-fadeInUp">
-          <div className="achievements-grid">
-            {[
-              { icon:'🩸', name:'First Drop',    desc:'Made your first donation',     earned:true  },
-              { icon:'⭐', name:'Regular Donor', desc:'3+ donations completed',        earned:true  },
-              { icon:'🔥', name:'Streak Hero',   desc:'Donated 3 times in a year',    earned:true  },
-              { icon:'🏆', name:'Gold Donor',    desc:'5+ lifetime donations',         earned:false },
-              { icon:'💎', name:'Diamond Donor', desc:'10+ lifetime donations',        earned:false },
-              { icon:'🦸', name:'Life Saver',    desc:'Saved 10+ lives estimated',    earned:false },
-            ].map((a,i)=>(
-              <div key={i} className={`achievement-card ${a.earned?'earned':'locked'}`}>
-                <div className="achievement-icon">{a.icon}</div>
-                <div className="achievement-name">{a.name}</div>
-                <div className="achievement-desc">{a.desc}</div>
-                {a.earned
-                  ? <span className="badge badge-success">Earned ✓</span>
-                  : <span className="badge" style={{ background:'rgba(255,255,255,.05)', color:'var(--text-muted)', border:'1px solid var(--border)' }}>🔒 Locked</span>
-                }
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Profile image upload modal ───────────────────────────── */}
+      <Modal
+        show={showImageModal}
+        onHide={() => { setShowImageModal(false); setImagePreview(null); setSelectedFile(null); }}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <FaCamera className="me-2 text-danger" />Update Profile Picture
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              style={{
+                width: '120px', height: '120px',
+                borderRadius: '50%', objectFit: 'cover',
+                border: '3px solid #dc3545', marginBottom: '16px'
+              }}
+            />
+          )}
+          <Form.Group>
+            <Form.Label>Select Image (max 5 MB)</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+            />
+            <Form.Text className="text-muted">JPG, PNG, GIF accepted</Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => { setShowImageModal(false); setImagePreview(null); setSelectedFile(null); }}
+          >
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleImageUpload} disabled={!selectedFile}>
+            Upload
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
-}
+};
+
+export default DonorDashboard;

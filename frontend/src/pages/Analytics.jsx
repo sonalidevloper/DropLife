@@ -1,223 +1,205 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import {
-  Container,
-  Card,
-  Row,
-  Col,
-  Nav,
-  Spinner,
-  Alert
-} from 'react-bootstrap';
-import { useTranslation } from 'react-i18next';
-import { FaChartBar } from 'react-icons/fa';
-
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  LineChart, Line, Legend
 } from 'recharts';
-
+import { FaChartLine, FaUsers, FaTint, FaCampground } from 'react-icons/fa';
 import api from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-const COLORS = [
-  '#dc3545', '#fd7e14', '#0d6efd', '#198754',
-  '#6f42c1', '#20c997', '#ffc107', '#6c757d'
+const DEMO_BLOOD_GROUPS = [
+  { bloodGroup: 'A+', donors: 142, requests: 55, stock: 45 },
+  { bloodGroup: 'A-', donors: 38,  requests: 20, stock: 8  },
+  { bloodGroup: 'B+', donors: 118, requests: 48, stock: 30 },
+  { bloodGroup: 'B-', donors: 22,  requests: 10, stock: 3  },
+  { bloodGroup: 'AB+', donors: 55, requests: 18, stock: 20 },
+  { bloodGroup: 'AB-', donors: 14, requests: 6,  stock: 0  },
+  { bloodGroup: 'O+', donors: 195, requests: 80, stock: 70 },
+  { bloodGroup: 'O-', donors: 60,  requests: 25, stock: 12 },
 ];
 
-const StatCard = ({ label, value, color = 'danger' }) => (
-  <Card className={`border-start border-4 border-${color} shadow-sm`}>
-    <Card.Body>
-      <div className="fw-bold fs-3">{value ?? '—'}</div>
-      <div className="text-muted small">{label}</div>
-    </Card.Body>
-  </Card>
-);
+const DEMO_MONTHLY = [
+  { month: 'Jan', donations: 45 }, { month: 'Feb', donations: 52 },
+  { month: 'Mar', donations: 61 }, { month: 'Apr', donations: 58 },
+  { month: 'May', donations: 73 }, { month: 'Jun', donations: 68 },
+  { month: 'Jul', donations: 80 }, { month: 'Aug', donations: 75 },
+  { month: 'Sep', donations: 88 }, { month: 'Oct', donations: 92 },
+  { month: 'Nov', donations: 85 }, { month: 'Dec', donations: 79 },
+];
 
 const Analytics = () => {
-  const { t } = useTranslation();
+  const [overview, setOverview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const [activeTab, setActiveTab] = useState('blood');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [data, setData] = useState({
-    blood: null,
-    trends: null,
-    requests: null,
-    hospital: null,
-    geographic: null
-  });
-
-  // 🔹 Fetch per tab (lazy loading)
-  const fetchTab = async (tab) => {
-    if (data[tab]) return;
-
-    setLoading(true);
-    setError(null);
-
-    const endpoints = {
-      blood: '/analytics/blood-stats',
-      trends: '/analytics/donation-trends',
-      requests: '/analytics/request-stats',
-      hospital: '/analytics/hospital-stats',
-      geographic: '/analytics/geographic'
-    };
-
+  const fetchAnalytics = useCallback(async () => {
     try {
-      const res = await api.get(endpoints[tab]);
-      setData(prev => ({ ...prev, [tab]: res.data }));
+      const res = await api.get('/analytics/overview');
+      setOverview(res.data.data);
     } catch {
-      setError('Failed to load analytics data. Using sample data.');
-
-      // 🔹 fallback sample data
-      const samples = {
-        blood: {
-          bloodGroups: [
-            { bloodGroup: 'A+', donors: 320, requests: 280, available: 45 },
-            { bloodGroup: 'O+', donors: 400, requests: 380, available: 60 }
-          ],
-          totalDonors: 1350,
-          totalRequests: 1211,
-          totalAvailable: 192
-        },
-        trends: {
-          monthly: [
-            { month: 'Jan', donations: 120 },
-            { month: 'Feb', donations: 145 }
-          ]
-        },
-        requests: {
-          byUrgency: [
-            { urgency: 'Critical', count: 145 },
-            { urgency: 'Normal', count: 746 }
-          ],
-          byStatus: [
-            { status: 'Open', count: 180 },
-            { status: 'Fulfilled', count: 850 }
-          ]
-        },
-        hospital: {
-          byType: [
-            { type: 'Government', count: 45 },
-            { type: 'Private', count: 120 }
-          ],
-          totalHospitals: 300,
-          withBloodBank: 180,
-          totalBeds: 45000
-        },
-        geographic: {
-          byCityState: [
-            { location: 'Mumbai', donors: 420 },
-            { location: 'Delhi', donors: 380 }
-          ]
-        }
-      };
-
-      setData(prev => ({ ...prev, [tab]: samples[tab] }));
+      setOverview({
+        totalDonors: 644, totalRequests: 262, totalCamps: 18,
+        bloodGroupStats: DEMO_BLOOD_GROUPS.map((d) => ({ _id: d.bloodGroup, count: d.donors })),
+        monthlyDonations: DEMO_MONTHLY.map((d, i) => ({ _id: i + 1, count: d.donations }))
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchTab(activeTab);
-  }, [activeTab]);
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
-  // 🔹 Renderers
+  if (loading) return <LoadingSpinner />;
 
-  const renderBloodStats = () => {
-    const d = data.blood;
-    if (!d) return null;
-
-    return (
-      <>
-        <Row className="g-3 mb-4">
-          <Col><StatCard label="Total Donors" value={d.totalDonors} /></Col>
-          <Col><StatCard label="Total Requests" value={d.totalRequests} color="warning" /></Col>
-          <Col><StatCard label="Available Units" value={d.totalAvailable} color="success" /></Col>
-        </Row>
-
-        <Card>
-          <Card.Body>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={d.bloodGroups}>
-                <XAxis dataKey="bloodGroup" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="donors" fill="#dc3545" />
-                <Bar dataKey="requests" fill="#0d6efd" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card.Body>
-        </Card>
-      </>
-    );
-  };
-
-  const renderTrends = () => {
-    const d = data.trends;
-    if (!d) return null;
-
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={d.monthly}>
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip />
-          <Line dataKey="donations" stroke="#dc3545" />
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  };
-
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="text-center py-5">
-          <Spinner animation="border" variant="danger" />
-        </div>
-      );
-    }
-
-    const map = {
-      blood: renderBloodStats,
-      trends: renderTrends
-    };
-
-    return map[activeTab]?.() || null;
-  };
-
-  const tabs = [
-    { key: 'blood', label: t('analytics.bloodStats', 'Blood Stats') },
-    { key: 'trends', label: t('analytics.donationTrends', 'Donation Trends') },
-    { key: 'requests', label: t('analytics.requestStats', 'Request Stats') },
-    { key: 'hospital', label: t('analytics.hospitalStats', 'Hospital Stats') },
-    { key: 'geographic', label: 'Geographic' }
-  ];
+  const bgStats = overview?.bloodGroupStats || [];
+  const monthlyData = DEMO_MONTHLY;
 
   return (
-    <Container className="py-4">
-      <h2 className="fw-bold text-center mb-4">
-        <FaChartBar className="me-2 text-danger" />
-        {t('analytics.title', 'Blood Donation Analytics')}
-      </h2>
+    <Container className="py-5">
+      <Row className="mb-4">
+        <Col>
+          <h2 className="fw-bold">
+            <FaChartLine className="me-2 text-danger" />Analytics Dashboard
+          </h2>
+          <p className="text-muted">Blood donation system insights</p>
+        </Col>
+      </Row>
 
-      {error && <Alert variant="warning">{error}</Alert>}
-
-      <Nav variant="tabs" className="mb-4">
-        {tabs.map(tab => (
-          <Nav.Item key={tab.key}>
-            <Nav.Link
-              active={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </Nav.Link>
-          </Nav.Item>
+      {/* Tab nav */}
+      <div className="mb-4">
+        {['overview', 'donors', 'requests'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`btn btn-sm me-2 ${activeTab === tab ? 'btn-danger' : 'btn-outline-danger'}`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
         ))}
-      </Nav>
+      </div>
 
-      {renderContent()}
+      {/* Overview tab */}
+      {activeTab === 'overview' && (
+        <>
+          <Row className="mb-4">
+            {[
+              { label: 'Total Donors',   value: overview?.totalDonors,   icon: FaUsers,    bg: 'bg-primary' },
+              { label: 'Blood Requests', value: overview?.totalRequests, icon: FaTint,     bg: 'bg-danger'  },
+              { label: 'Donation Camps', value: overview?.totalCamps,    icon: FaCampground, bg: 'bg-success' },
+              { label: 'Lives Saved',    value: (overview?.totalDonors || 0) * 3, icon: FaTint, bg: 'bg-warning' },
+            ].map(({ label, value, icon: Icon, bg }) => (
+              <Col md={3} key={label} className="mb-3">
+                <Card className={`${bg} text-white shadow text-center p-3`}>
+                  <Icon size={30} className="mb-2" />
+                  <h3>{value?.toLocaleString()}</h3>
+                  <p className="mb-0">{label}</p>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          <Row>
+            <Col md={6} className="mb-4">
+              <Card className="shadow">
+                <Card.Header className="bg-danger text-white">
+                  <h5 className="mb-0">Donors by Blood Group</h5>
+                </Card.Header>
+                <Card.Body>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={bgStats.map((s) => ({ name: s._id, Donors: s.count }))}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="Donors" fill="#dc3545" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={6} className="mb-4">
+              <Card className="shadow">
+                <Card.Header className="bg-danger text-white">
+                  <h5 className="mb-0">Monthly Donation Trend</h5>
+                </Card.Header>
+                <Card.Body>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={monthlyData}>
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="donations"
+                        stroke="#dc3545"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      )}
+
+      {/* Donors tab */}
+      {activeTab === 'donors' && (
+        <Row>
+          <Col>
+            <Card className="shadow">
+              <Card.Header className="bg-danger text-white">
+                <h5 className="mb-0">Blood Group Distribution</h5>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  {DEMO_BLOOD_GROUPS.map((d) => (
+                    <Col md={3} key={d.bloodGroup} className="mb-3">
+                      <Card className="text-center border">
+                        <Card.Body>
+                          <h4 className="text-danger fw-bold">{d.bloodGroup}</h4>
+                          <h5>{d.donors} donors</h5>
+                          <Badge bg="info">Stock: {d.stock}u</Badge>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Requests tab */}
+      {activeTab === 'requests' && (
+        <Row>
+          <Col>
+            <Card className="shadow">
+              <Card.Header className="bg-danger text-white">
+                <h5 className="mb-0">Requests vs Donors by Blood Group</h5>
+              </Card.Header>
+              <Card.Body>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={DEMO_BLOOD_GROUPS}>
+                    <XAxis dataKey="bloodGroup" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="donors"   fill="#dc3545" name="Donors"   radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="requests" fill="#6c757d" name="Requests" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

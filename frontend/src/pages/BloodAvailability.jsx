@@ -74,11 +74,33 @@ export default function BloodAvailability() {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/blood-stock/availability`,
+        `${process.env.REACT_APP_API_URL || "http://localhost:5003"}/hospitals`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
-      setStockData(Array.isArray(data) ? data : data.data || []);
-      setUsingMock(false);
+      const hospitals = data.data || [];
+
+const formatted = hospitals.map(h => {
+  const stocks = {};
+
+  (h.bloodAvailability || []).forEach(b => {
+    stocks[b.bloodGroup] = b.unitsAvailable;
+  });
+
+  return {
+    _id: h._id,
+    hospital: {
+      name: h.name,
+      city: h.address?.city?.trim(),
+      address: h.address?.street,
+      phone: h.phone
+    },
+    stocks,
+    lastUpdated: new Date()
+  };
+});
+
+setStockData(formatted);
+setUsingMock(false);
     } catch {
       // fallback to mock
       setStockData(MOCK_STOCK_DATA);
@@ -102,7 +124,7 @@ export default function BloodAvailability() {
       const cityMatch = city.includes(searchCity.toLowerCase());
       const nameMatch = name.includes(searchHospital.toLowerCase());
       const groupMatch =
-        selectedGroup === "all" || (item.stocks && (item.stocks[selectedGroup] ?? 0) > 0);
+        selectedGroup === "all" || (item.stocks && (item.stocks?.[selectedGroup] ||  0) > 0);
       return cityMatch && nameMatch && groupMatch;
     })
     .sort((a, b) => {
@@ -395,10 +417,9 @@ export default function BloodAvailability() {
       </div>
 
       <div style={styles.container}>
-        {/* Mock data banner */}
         {usingMock && (
           <div style={styles.mockBanner}>
-            ⚠️ Showing demo data — connect your backend for live stock updates
+            ⚠️ Showing mock data — backend unavailable
           </div>
         )}
 

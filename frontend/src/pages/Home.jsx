@@ -30,7 +30,7 @@ const Home = () => {
             </Col>
             <Col lg={6} className="text-center">
               <img 
-                src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=500" 
+                src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=600" 
                 alt="Blood Donation" 
                 className="img-fluid rounded hero-image animate-zoom-in"
               />

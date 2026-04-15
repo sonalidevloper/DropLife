@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
-import { register, reset } from '../redux/authSlice';
+import { register, registerUser, reset } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import { FaTint } from 'react-icons/fa';
 import { BLOOD_GROUPS, INDIAN_STATES } from '../utils/constants';
@@ -45,6 +45,7 @@ const Signup = () => {
       city: '',
       state: '',
       pincode: '',
+      role: 'donor',
     },
     validationSchema: Yup.object({
       name: Yup.string().required('Name is required'),
@@ -75,7 +76,11 @@ const Signup = () => {
           coordinates: coordinates,
         },
       };
-      dispatch(register(userData));
+      if (values.role === 'user') {
+  dispatch(registerUser(userData));
+} else {
+  dispatch(register(userData));
+}
     },
   });
 
@@ -86,7 +91,11 @@ const Signup = () => {
 
     if (isSuccess && user) {
       toast.success('Registration successful! Welcome to DROPLIFE!');
-      navigate('/donor/dashboard');
+      if (user.role === 'user') {
+  navigate('/request/dashboard');
+} else {
+  navigate('/donor/dashboard');
+}
     }
 
     dispatch(reset());
@@ -341,7 +350,17 @@ const Signup = () => {
                       </Form.Group>
                     </Col>
                   </Row>
-
+                        <Form.Group className="mb-3">
+  <Form.Label>Register As *</Form.Label>
+  <Form.Select
+    name="role"
+    value={formik.values.role}
+    onChange={formik.handleChange}
+  >
+    <option value="donor">Donor</option>
+    <option value="user">Requester</option>
+  </Form.Select>
+</Form.Group>
                   <Button
                     type="submit"
                     variant="danger"

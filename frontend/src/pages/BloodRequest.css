@@ -1,152 +1,27 @@
-/* BloodAvailability.css */
-.blood-avail-page {
-  padding: 32px;
-  max-width: 1400px;
-  margin: 0 auto;
-  animation: fadeIn 0.4s ease;
+.blood-request-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 0;
 }
 
-.ba-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28px;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.ba-header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-
-/* Blood summary cards */
-.blood-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 12px;
-  margin-bottom: 28px;
-}
-.blood-sum-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-}
-.blood-sum-card:hover, .blood-sum-card.selected {
-  border-color: var(--border-red);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-3px);
-}
-.blood-sum-card.selected { background: rgba(227,27,35,0.06); }
-.bsc-info { text-align: center; }
-.bsc-units { font-family: var(--font-display); font-size: 1.2rem; color: var(--text-primary); line-height: 1; }
-.bsc-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-.bsc-dot {
-  position: absolute; top: 10px; right: 10px;
-  width: 8px; height: 8px; border-radius: 50%;
-}
-.bsc-dot.available { background: var(--success); }
-.bsc-dot.low { background: var(--warning); }
-.bsc-dot.critical { background: var(--danger); animation: pulse-red 1.5s infinite; }
-
-/* Filters */
-.ba-filters {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-}
-.ba-filters .form-select { flex: 1; min-width: 120px; max-width: 160px; }
-.view-toggle {
-  display: flex;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-.view-toggle button {
-  background: none; border: none;
-  padding: 8px 12px;
-  color: var(--text-muted);
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.view-toggle button.active { background: rgba(227,27,35,0.15); color: var(--red-light); }
-
-/* Results info */
-.ba-results-info {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--text-muted); font-size: 13px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.filter-tag {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(227,27,35,0.1);
-  border: 1px solid var(--border-red);
-  color: var(--red-light);
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 12px;
-}
-.filter-tag button {
-  background: none; border: none;
-  color: var(--red-light);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 2px;
-  line-height: 1;
+.request-card {
+  border: none;
+  border-radius: 20px;
+  animation: fadeInScale 0.5s ease-out;
 }
 
-/* Grid */
-.ba-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
-.ba-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  transition: var(--transition);
-  display: flex; flex-direction: column; gap: 16px;
-}
-.ba-card:hover { border-color: var(--border-red); box-shadow: var(--shadow-hover); transform: translateY(-3px); }
-.ba-card-header { display: flex; align-items: center; gap: 12px; }
-.ba-card-hospital { flex: 1; }
-.ba-hospital-name { font-weight: 700; font-size: 14px; line-height: 1.2; }
-.ba-hospital-city { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.ba-card-stats { display: flex; align-items: center; gap: 16px; }
-.ba-stat { flex: 1; }
-.ba-stat-val { font-family: var(--font-display); font-size: 1.5rem; color: var(--text-primary); line-height: 1; }
-.ba-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-.ba-stat-divider { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
-.units-bar-wrap { height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
-.units-bar-fill { height: 100%; border-radius: 100px; transition: width 0.8s ease; }
-.ba-card-footer { display: flex; align-items: center; justify-content: space-between; }
-.ba-updated { font-size: 11px; color: var(--text-muted); }
-.ba-actions { display: flex; gap: 8px; }
 
-@media (max-width: 1200px) {
-  .blood-summary-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 768px) {
-  .blood-avail-page { padding: 16px; }
-  .blood-summary-grid { grid-template-columns: repeat(4, 1fr); }
-  .ba-filters { flex-direction: column; }
-  .ba-filters .form-select { max-width: 100%; }
-}
-@media (max-width: 480px) {
-  .blood-summary-grid { grid-template-columns: repeat(2, 1fr); }
+.request-card .form-control,
+.request-card .form-select {
+  border-radius: 10px;
 }

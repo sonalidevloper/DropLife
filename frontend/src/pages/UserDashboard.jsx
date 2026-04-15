@@ -1,261 +1,217 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  FaTint, FaHospital, FaBell, FaMap,
-  FaChartBar, FaUser, FaEdit, FaCheckCircle
+  Container, Row, Col, Card, Badge, Button, Table, Modal, Form
+} from 'react-bootstrap';
+import {
+  FaUser, FaTint, FaHandHoldingMedical, FaMapMarkerAlt,
+  FaBell, FaClock, FaCheckCircle
 } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import api from '../services/api';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
+import './Dashboard.css';
+
+const URGENCY_VARIANT = { Critical: 'danger', Urgent: 'warning', Normal: 'secondary' };
+const STATUS_VARIANT  = { Open: 'primary', 'In Progress': 'warning', Fulfilled: 'success', Cancelled: 'danger' };
 
 const UserDashboard = () => {
   const { user } = useSelector((state) => state.auth);
-
-  const [requests, setRequests] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [stats, setStats] = useState({ requests: 0 });
+  const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelId, setCancelId] = useState(null);
 
-  // 🔥 FETCH DATA (FIXED + SAFE)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [reqRes, notifRes] = await Promise.all([
-          api.get('/blood-request/my'), // ✅ FIXED (no frontend filtering)
-          api.get('/notifications?limit=3')
-        ]);
-
-        const reqData = Array.isArray(reqRes.data)
-          ? reqRes.data
-          : reqRes.data.requests || [];
-
-        setRequests(reqData.slice(0, 5));
-        setStats({ requests: reqData.length });
-
-        const notifData = Array.isArray(notifRes.data)
-          ? notifRes.data
-          : notifRes.data.notifications || [];
-
-        setNotifications(notifData.slice(0, 3));
-
-      } catch (err) {
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?._id) fetchData();
+  const fetchMyRequests = useCallback(async () => {
+    try {
+      const res = await api.get('/blood-request');
+      // Show only requests made by this user
+      const all = res.data.data || [];
+      const mine = all.filter(
+        (r) => r.requestedBy === user?.id || r.requesterEmail === user?.email
+      );
+      setMyRequests(mine);
+    } catch {
+      setMyRequests([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
-  // 🔥 BADGE HELPERS
-  const urgencyBadge = (urgency) => {
-    const map = { Critical: 'danger', Urgent: 'warning', Normal: 'success' };
-    return <Badge bg={map[urgency] || 'secondary'}>{urgency}</Badge>;
+  useEffect(() => { fetchMyRequests(); }, [fetchMyRequests]);
+
+  const handleCancel = async () => {
+    try {
+      await api.put(`/blood-request/${cancelId}/status`, { status: 'Cancelled' });
+      toast.success('Request cancelled');
+      setShowCancelModal(false);
+      fetchMyRequests();
+    } catch { toast.error('Failed to cancel request'); }
   };
 
-  const statusBadge = (status) => {
-    const map = {
-      Open: 'primary',
-      'In Progress': 'info',
-      Fulfilled: 'success',
-      Cancelled: 'secondary'
-    };
-    return <Badge bg={map[status] || 'secondary'}>{status}</Badge>;
-  };
+  const openCount    = myRequests.filter((r) => r.status === 'Open').length;
+  const progressCount = myRequests.filter((r) => r.status === 'In Progress').length;
+  const fulfilledCount = myRequests.filter((r) => r.status === 'Fulfilled').length;
+
+  if (loading) return <LoadingSpinner />;
 
   return (
-    <Container className="py-4">
+    <div className="dashboard-page">
+      <Container className="py-5">
+        {/* Header */}
+        <Row className="mb-4">
+          <Col>
+            <div className="dashboard-header">
+              <h2 className="fw-bold">
+                <FaUser className="me-2 text-danger" />
+                Welcome, {user?.name}!
+              </h2>
+              <p className="text-muted">Manage your blood requests here</p>
+            </div>
+          </Col>
+          <Col className="text-end">
+            <Link to="/blood-request" className="btn btn-danger">
+              <FaHandHoldingMedical className="me-2" />New Blood Request
+            </Link>
+          </Col>
+        </Row>
 
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="fw-bold mb-1">
-            Welcome back, <span className="text-danger">{user?.name}</span> 👋
-          </h2>
-          <p className="text-muted mb-0">
-            Blood Group: <Badge bg="danger">{user?.bloodGroup || 'N/A'}</Badge>
-          </p>
-        </div>
+        {/* Stats */}
+        <Row className="mb-4">
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-primary text-white shadow text-center p-3">
+              <FaTint size={30} className="mb-2" />
+              <h3>{myRequests.length}</h3>
+              <p className="mb-0">Total Requests</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-warning text-white shadow text-center p-3">
+              <FaClock size={30} className="mb-2" />
+              <h3>{openCount}</h3>
+              <p className="mb-0">Open</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-info text-white shadow text-center p-3">
+              <FaBell size={30} className="mb-2" />
+              <h3>{progressCount}</h3>
+              <p className="mb-0">In Progress</p>
+            </Card>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Card className="stat-card bg-success text-white shadow text-center p-3">
+              <FaCheckCircle size={30} className="mb-2" />
+              <h3>{fulfilledCount}</h3>
+              <p className="mb-0">Fulfilled</p>
+            </Card>
+          </Col>
+        </Row>
 
-        <div className="text-end">
-          <span className="badge bg-light text-dark border">
-            <FaUser className="me-1" /> {user?.role || 'User'}
-          </span>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <Row className="g-3 mb-4">
-        <Col xs={12} sm={4}>
-          <Card className="h-100 border-start border-4 border-danger shadow-sm">
-            <Card.Body className="d-flex align-items-center gap-3">
-              <FaTint className="text-danger" size={30} />
-              <div>
-                <div className="fw-bold fs-4">
-                  {loading ? '…' : stats.requests}
-                </div>
-                <div className="text-muted small">My Blood Requests</div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={4}>
-          <Card className="h-100 border-start border-4 border-primary shadow-sm">
-            <Card.Body className="d-flex align-items-center gap-3">
-              <FaHospital className="text-primary" size={30} />
-              <div>
-                <div className="fw-bold fs-4">—</div>
-                <div className="text-muted small">Nearby Hospitals</div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={4}>
-          <Card className="h-100 border-start border-4 border-success shadow-sm">
-            <Card.Body className="d-flex align-items-center gap-3">
-              <FaCheckCircle className="text-success" size={30} />
-              <div>
-                <div className="fw-bold fs-4">—</div>
-                <div className="text-muted small">Upcoming Camps</div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* QUICK ACTIONS */}
-      <Card className="shadow-sm mb-4">
-        <Card.Header className="fw-bold bg-danger text-white">
-          Quick Actions
-        </Card.Header>
-
-        <Card.Body>
-          <div className="d-flex flex-wrap gap-2">
-            <Button as={Link} to="/blood-request" variant="danger">
-              <FaTint className="me-1" /> Request Blood
-            </Button>
-
-            <Button as={Link} to="/map" variant="outline-primary">
-              <FaMap className="me-1" /> Find Donors
-            </Button>
-
-            <Button as={Link} to="/hospitals" variant="outline-info">
-              <FaHospital className="me-1" /> Hospitals
-            </Button>
-
-            <Button as={Link} to="/analytics" variant="outline-success">
-              <FaChartBar className="me-1" /> Analytics
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Row className="g-4">
-
-        {/* REQUESTS */}
-        <Col xs={12} lg={8}>
-          <Card className="shadow-sm h-100">
-            <Card.Header className="d-flex justify-content-between">
-              <span className="fw-bold">My Recent Blood Requests</span>
-              <Link to="/blood-request" className="btn btn-sm btn-danger">
-                + New
-              </Link>
-            </Card.Header>
-
-            <Card.Body className="p-0">
-
-              {loading ? (
-                <div className="text-center py-4">Loading...</div>
-              ) : requests.length === 0 ? (
-                <div className="text-center py-4">
-                  No requests yet
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
+        {/* My Requests */}
+        <Row>
+          <Col>
+            <Card className="dashboard-card shadow">
+              <Card.Header className="bg-danger text-white">
+                <h5 className="mb-0">
+                  <FaHandHoldingMedical className="me-2" />My Blood Requests
+                </h5>
+              </Card.Header>
+              <Card.Body>
+                {myRequests.length === 0 ? (
+                  <div className="text-center py-5">
+                    <FaTint size={60} className="text-muted mb-3" />
+                    <p className="text-muted">No blood requests yet.</p>
+                    <Link to="/blood-request" className="btn btn-danger mt-2">
+                      Create Your First Request
+                    </Link>
+                  </div>
+                ) : (
+                  <Table responsive hover>
+                    <thead>
                       <tr>
+                        <th>Patient</th>
                         <th>Blood</th>
                         <th>Units</th>
+                        <th>Hospital</th>
                         <th>Urgency</th>
                         <th>Status</th>
-                        <th>Date</th>
+                        <th>Need By</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
-
                     <tbody>
-                      {requests.map((r) => (
-                        <tr key={r._id}>
-                          <td><Badge bg="danger">{r.bloodGroup}</Badge></td>
-                          <td>{r.units}</td>
-                          <td>{urgencyBadge(r.urgency)}</td>
-                          <td>{statusBadge(r.status)}</td>
+                      {myRequests.map((req) => (
+                        <tr key={req._id}>
+                          <td className="fw-bold">{req.patientName}</td>
+                          <td><Badge bg="danger">{req.bloodGroup}</Badge></td>
+                          <td>{req.unitsRequired}</td>
+                          <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {req.hospital?.name}
+                          </td>
                           <td>
-                            {new Date(r.createdAt).toLocaleDateString()}
+                            <Badge bg={URGENCY_VARIANT[req.urgency]}>{req.urgency}</Badge>
+                          </td>
+                          <td>
+                            <Badge bg={STATUS_VARIANT[req.status]}>{req.status}</Badge>
+                          </td>
+                          <td>
+                            {req.needByDate
+                              ? new Date(req.needByDate).toLocaleDateString()
+                              : '—'}
+                          </td>
+                          <td>
+                            {req.status === 'Open' && (
+                              <Button
+                                size="sm"
+                                variant="outline-danger"
+                                onClick={() => { setCancelId(req._id); setShowCancelModal(true); }}
+                              >
+                                Cancel
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                  </table>
-                </div>
-              )}
+                  </Table>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-            </Card.Body>
-          </Card>
-        </Col>
+        {/* Quick links */}
+        <Row className="mt-4">
+          {[
+            { to: '/blood-availability', label: 'Check Blood Availability', icon: FaTint,          variant: 'outline-danger'  },
+            { to: '/hospitals',          label: 'Find Hospitals',            icon: FaMapMarkerAlt,  variant: 'outline-primary' },
+            { to: '/camps',              label: 'Donation Camps',            icon: FaBell,          variant: 'outline-success' },
+            { to: '/helpline',           label: 'Emergency Helpline',        icon: FaHandHoldingMedical, variant: 'outline-warning' },
+          ].map(({ to, label, icon: Icon, variant }) => (
+            <Col md={3} key={to} className="mb-3">
+              <Card className="dashboard-card shadow text-center p-3 h-100">
+                <Icon size={30} className="text-danger mb-2 mx-auto" />
+                <Link to={to} className={`btn btn-sm ${variant}`}>{label}</Link>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
 
-        {/* PROFILE + NOTIFICATIONS */}
-        <Col xs={12} lg={4}>
-
-          {/* PROFILE */}
-          <Card className="shadow-sm mb-3">
-            <Card.Header className="fw-bold">
-              <FaUser className="me-2 text-danger" /> My Profile
-            </Card.Header>
-
-            <Card.Body className="text-center">
-              <div className="fw-bold">{user?.name}</div>
-              <div className="text-muted small">{user?.email}</div>
-
-              <Button as={Link} to="/profile" variant="outline-danger" size="sm" className="mt-2">
-                <FaEdit /> Edit
-              </Button>
-            </Card.Body>
-          </Card>
-
-          {/* NOTIFICATIONS */}
-          <Card className="shadow-sm">
-            <Card.Header className="d-flex justify-content-between">
-              <span><FaBell /> Notifications</span>
-              <Link to="/notifications">View All</Link>
-            </Card.Header>
-
-            <Card.Body className="p-0">
-              {notifications.length === 0 ? (
-                <div className="text-center py-3">No notifications</div>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n._id}
-                    className={`px-3 py-2 border-bottom ${!n.isRead ? 'bg-light' : ''}`}
-                  >
-                    <div className="fw-semibold">{n.title}</div>
-                    <div className="small text-muted">{n.message}</div>
-                  </div>
-                ))
-              )}
-            </Card.Body>
-          </Card>
-
-        </Col>
-
-      </Row>
-
-    </Container>
+      {/* Cancel Confirmation */}
+      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Cancel Request?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to cancel this blood request?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelModal(false)}>No, Keep It</Button>
+          <Button variant="danger" onClick={handleCancel}>Yes, Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 

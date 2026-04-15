@@ -1,4 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';import { Container, Row, Col, Card, Table, Badge, Form, InputGroup, Button } from 'react-bootstrap';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  Container, Row, Col, Card, Table, Badge, Form, InputGroup, Button
+} from 'react-bootstrap';
 import { FaSearch, FaCheckCircle, FaTrash } from 'react-icons/fa';
 import api from '../services/api';
 import { toast } from 'react-toastify';
@@ -16,13 +19,13 @@ const DonorList = () => {
         ? `/admin/donors?bloodGroup=${filterBloodGroup}`
         : '/admin/donors';
       const response = await api.get(url);
-      setDonors(response.data.data);
-      setLoading(false);
-    } catch (error) {
+      setDonors(response.data.data || []);
+    } catch {
       toast.error('Failed to fetch donors');
+    } finally {
       setLoading(false);
     }
-  }, [filterBloodGroup]); // Add filterBloodGroup as dependency
+  }, [filterBloodGroup]);
 
   useEffect(() => {
     fetchDonors();
@@ -33,20 +36,19 @@ const DonorList = () => {
       await api.put(`/admin/donors/${donorId}/verify`);
       toast.success('Donor verified successfully');
       fetchDonors();
-    } catch (error) {
+    } catch {
       toast.error('Failed to verify donor');
     }
   };
 
   const handleDelete = async (donorId) => {
-    if (window.confirm('Are you sure you want to delete this donor?')) {
-      try {
-        await api.delete(`/admin/donors/${donorId}`);
-        toast.success('Donor deleted successfully');
-        fetchDonors();
-      } catch (error) {
-        toast.error('Failed to delete donor');
-      }
+    if (!window.confirm('Are you sure you want to delete this donor?')) return;
+    try {
+      await api.delete(`/admin/donors/${donorId}`);
+      toast.success('Donor deleted successfully');
+      fetchDonors();
+    } catch {
+      toast.error('Failed to delete donor');
     }
   };
 
@@ -56,9 +58,7 @@ const DonorList = () => {
       donor.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  if (loading) return <LoadingSpinner />;
 
   return (
     <Container className="py-5">
@@ -72,9 +72,7 @@ const DonorList = () => {
       <Row className="mb-4">
         <Col md={6}>
           <InputGroup>
-            <InputGroup.Text>
-              <FaSearch />
-            </InputGroup.Text>
+            <InputGroup.Text><FaSearch /></InputGroup.Text>
             <Form.Control
               type="text"
               placeholder="Search by name or email..."
@@ -84,18 +82,19 @@ const DonorList = () => {
           </InputGroup>
         </Col>
         <Col md={3}>
-          <Form.Select value={filterBloodGroup} onChange={(e) => setFilterBloodGroup(e.target.value)}>
+          <Form.Select
+            value={filterBloodGroup}
+            onChange={(e) => setFilterBloodGroup(e.target.value)}
+          >
             <option value="">All Blood Groups</option>
-            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
-              <option key={bg} value={bg}>
-                {bg}
-              </option>
+            {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map((bg) => (
+              <option key={bg} value={bg}>{bg}</option>
             ))}
           </Form.Select>
         </Col>
         <Col md={3}>
-          <Badge bg="primary" className="p-3 w-100">
-            Total Donors: {filteredDonors.length}
+          <Badge bg="primary" className="p-3 w-100 fs-6">
+            Total: {filteredDonors.length}
           </Badge>
         </Col>
       </Row>
@@ -123,45 +122,27 @@ const DonorList = () => {
                       <td>{donor.name}</td>
                       <td>{donor.email}</td>
                       <td>{donor.phone}</td>
-                      <td>
-                        <Badge bg="danger">{donor.bloodGroup}</Badge>
-                      </td>
-                      <td>
-                        {donor.address?.city}, {donor.address?.state}
-                      </td>
+                      <td><Badge bg="danger">{donor.bloodGroup}</Badge></td>
+                      <td>{donor.address?.city}, {donor.address?.state}</td>
                       <td>{donor.donationCount}</td>
                       <td>
-                        {donor.isVerified ? (
-                          <Badge bg="success">Verified</Badge>
-                        ) : (
-                          <Badge bg="warning">Unverified</Badge>
-                        )}
-                        {donor.isAvailable ? (
-                          <Badge bg="success" className="ms-1">
-                            Available
-                          </Badge>
-                        ) : (
-                          <Badge bg="secondary" className="ms-1">
-                            Unavailable
-                          </Badge>
-                        )}
+                        {donor.isVerified
+                          ? <Badge bg="success">Verified</Badge>
+                          : <Badge bg="warning">Unverified</Badge>}
+                        {' '}
+                        {donor.isAvailable
+                          ? <Badge bg="success">Available</Badge>
+                          : <Badge bg="secondary">Unavailable</Badge>}
                       </td>
                       <td>
                         {!donor.isVerified && (
-                          <Button
-                            variant="success"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleVerify(donor._id)}
-                          >
-                            <FaCheckCircle /> Verify
+                          <Button variant="success" size="sm" className="me-1"
+                            onClick={() => handleVerify(donor._id)}>
+                            <FaCheckCircle />
                           </Button>
                         )}
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(donor._id)}
-                        >
+                        <Button variant="danger" size="sm"
+                          onClick={() => handleDelete(donor._id)}>
                           <FaTrash />
                         </Button>
                       </td>

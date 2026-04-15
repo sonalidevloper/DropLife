@@ -1,110 +1,62 @@
 import React, { useState } from 'react';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import {
-  Container, Row, Col, Card, Form, Button, Alert
-} from 'react-bootstrap';
-import { FaTint, FaEnvelope } from 'react-icons/fa';
+import { FaTint } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import './Auth.css';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
 
-  // 🔹 Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!email.trim()) {
-      setError('Email is required');
-      return;
-    }
-
-    setError('');
     setLoading(true);
-
     try {
       await api.post('/auth/forgot-password', { email });
-
       setSent(true);
-      toast.success('Password reset link sent!');
+      toast.success('Password reset link sent to your email!');
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        'Failed to send reset link. Try again.';
-
-      setError(msg);
-      toast.error(msg);
+      toast.error(err.response?.data?.message || 'Failed to send reset email');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center"
-      style={{
-        background: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)'
-      }}
-    >
+    <div className="auth-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col xs={12} sm={10} md={8} lg={5}>
-
-            {/* HEADER */}
-            <div className="text-center mb-4">
-              <FaTint className="text-danger" style={{ fontSize: '3rem' }} />
-              <h2 className="fw-bold mt-2">Forgot Password</h2>
-              <p className="text-muted">
-                Enter your email to receive a reset link
-              </p>
-            </div>
-
-            {/* CARD */}
-            <Card className="shadow border-0">
-              <Card.Body className="p-4">
+        <Row className="justify-content-center align-items-center min-vh-100">
+          <Col md={5}>
+            <Card className="auth-card shadow-lg">
+              <Card.Body className="p-5">
+                <div className="text-center mb-4">
+                  <FaTint size={55} className="text-danger mb-3" />
+                  <h2 className="fw-bold">Forgot Password</h2>
+                  <p className="text-muted">
+                    Enter your email and we'll send you a reset link
+                  </p>
+                </div>
 
                 {sent ? (
-                  // ✅ SUCCESS STATE
-                  <div className="text-center py-3">
-                    <div style={{ fontSize: '3rem' }}>📧</div>
-
-                    <h5 className="mt-3 fw-bold text-success">
-                      Email Sent!
-                    </h5>
-
-                    <p className="text-muted">
-                      Password reset link sent to{' '}
-                      <strong>{email}</strong>.
-                      <br />
-                      Please check your inbox.
-                    </p>
-
-                    <Link to="/login" className="btn btn-danger mt-2">
+                  <div className="text-center">
+                    <div className="alert alert-success">
+                      ✅ Reset link sent! Check your email inbox.
+                    </div>
+                    <Link to="/login" className="btn btn-danger mt-3">
                       Back to Login
                     </Link>
                   </div>
                 ) : (
-                  // 🔹 FORM
                   <Form onSubmit={handleSubmit}>
-
-                    {error && (
-                      <Alert variant="danger">
-                        {error}
-                      </Alert>
-                    )}
-
                     <Form.Group className="mb-3">
-                      <Form.Label>
-                        <FaEnvelope className="me-1" />
-                        Email Address
-                      </Form.Label>
-
+                      <Form.Label>Email Address</Form.Label>
                       <Form.Control
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Enter your registered email"
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -114,27 +66,21 @@ const ForgotPassword = () => {
                     <Button
                       type="submit"
                       variant="danger"
-                      className="w-100 fw-semibold"
+                      className="w-100 mb-3"
                       disabled={loading}
                     >
-                      {loading ? 'Sending...' : 'Send Reset Link'}
+                      {loading ? 'Sending…' : 'Send Reset Link'}
                     </Button>
 
+                    <div className="text-center">
+                      <Link to="/login" className="text-muted">
+                        ← Back to Login
+                      </Link>
+                    </div>
                   </Form>
                 )}
-
               </Card.Body>
             </Card>
-
-            {/* BACK LINK */}
-            {!sent && (
-              <div className="text-center mt-3">
-                <Link to="/login" className="text-danger small">
-                  ← Back to Login
-                </Link>
-              </div>
-            )}
-
           </Col>
         </Row>
       </Container>

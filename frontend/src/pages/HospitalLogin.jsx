@@ -1,153 +1,114 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { Formik } from 'formik';
+import React, { useEffect } from 'react';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, reset } from '../redux/authSlice';
+import { FaHospital } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux';
-import { FaTint } from 'react-icons/fa';
-import api from '../services/api';
-import { login } from '../redux/authSlice';
-
-const validationSchema = Yup.object({
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  password: Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
-});
+import 'react-toastify/dist/ReactToastify.css';
+import './Auth.css';
 
 const HospitalLogin = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate  = useNavigate();
+  const dispatch  = useDispatch();
+  const { user, isLoading, isError, isSuccess, message } =
+    useSelector((state) => state.auth);
 
-  const handleSubmit = async (values, { setSubmitting, setStatus }) => {
-    try {
-      const res = await api.post('/hospitals/login', values);
+  const formik = useFormik({
+    initialValues: { email: '', password: '' },
+    validationSchema: Yup.object({
+      email:    Yup.string().email('Invalid email').required('Email is required'),
+      password: Yup.string().required('Password is required')
+    }),
+    onSubmit: (values) => dispatch(login(values))
+  });
 
-      const { token, hospital } = res.data;
+  useEffect(() => {
+    if (isError) toast.error(message);
 
-      const userObj = { ...hospital, role: 'hospital' };
-
-      // ✅ Correct Redux dispatch
-      dispatch(login({ token, user: userObj }));
-
-      // ✅ Persist
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userObj));
-
-      toast.success('Welcome to Hospital Portal!');
+    if (isSuccess && user && user.role === 'hospital') {
+      toast.success(`Welcome back, ${user.name}!`);
       navigate('/hospital/dashboard');
-
-    } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        'Login failed. Check your credentials.';
-
-      setStatus(msg);
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
     }
-  };
+
+    dispatch(reset());
+  }, [user, isError, isSuccess, message, navigate, dispatch]);
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center"
-      style={{ background: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)' }}
-    >
+    <div className="auth-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col xs={12} sm={10} md={8} lg={5}>
+        <Row className="justify-content-center align-items-center min-vh-100">
+          <Col md={6} lg={5}>
+            <Card className="auth-card shadow-lg">
+              <Card.Body className="p-5">
+                <div className="text-center mb-4">
+                  <FaHospital size={60} className="text-danger mb-3" />
+                  <h2 className="fw-bold">Hospital Login</h2>
+                  <p className="text-muted">Access your hospital panel</p>
+                </div>
 
-            <div className="text-center mb-4">
-              <FaTint className="text-danger" style={{ fontSize: '3rem' }} />
-              <h2 className="fw-bold mt-2">Hospital Portal Login</h2>
-              <p className="text-muted">
-                Access your hospital management dashboard
-              </p>
-            </div>
+                <Form onSubmit={formik.handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Hospital Email</Form.Label>
+                    <Form.Control
+                      type="email"
+                      placeholder="Enter hospital email"
+                      name="email"
+                      autoComplete="email"
+                      value={formik.values.email}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      isInvalid={formik.touched.email && formik.errors.email}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {formik.errors.email}
+                    </Form.Control.Feedback>
+                  </Form.Group>
 
-            <Card className="shadow border-0">
-              <Card.Body className="p-4">
+                  <Form.Group className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Enter password"
+                      name="password"
+                      autoComplete="current-password"
+                      value={formik.values.password}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      isInvalid={formik.touched.password && formik.errors.password}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {formik.errors.password}
+                    </Form.Control.Feedback>
+                  </Form.Group>
 
-                <Formik
-                  initialValues={{ email: '', password: '' }}
-                  validationSchema={validationSchema}
-                  onSubmit={handleSubmit}
-                >
-                  {({
-                    values,
-                    errors,
-                    touched,
-                    handleChange,
-                    handleBlur,
-                    handleSubmit: formSubmit,
-                    isSubmitting,
-                    status
-                  }) => (
-                    <Form noValidate onSubmit={formSubmit}>
+                  <Button
+                    type="submit"
+                    variant="danger"
+                    className="w-100 mb-3"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Logging in…' : 'Login'}
+                  </Button>
 
-                      {status && <Alert variant="danger">{status}</Alert>}
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Hospital Email</Form.Label>
-                        <Form.Control
-                          type="email"
-                          name="email"
-                          value={values.email}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          isInvalid={touched.email && !!errors.email}
-                          placeholder="hospital@example.com"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.email}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control
-                          type="password"
-                          name="password"
-                          value={values.password}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          isInvalid={touched.password && !!errors.password}
-                          placeholder="Enter password"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.password}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
-                      <div className="d-flex justify-content-end mb-3">
-                        <Link to="/forgot-password" className="text-danger small">
-                          Forgot Password?
-                        </Link>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        variant="danger"
-                        className="w-100 fw-semibold"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Signing in...' : 'Sign In'}
-                      </Button>
-
-                    </Form>
-                  )}
-                </Formik>
-
+                  <div className="text-center">
+                    <p className="mb-1">
+                      Not registered?{' '}
+                      <Link to="/hospital/signup" className="text-danger fw-bold">
+                        Register Hospital
+                      </Link>
+                    </p>
+                    <p className="mb-0">
+                      <Link to="/login" className="text-muted">
+                        Donor / User Login
+                      </Link>
+                    </p>
+                  </div>
+                </Form>
               </Card.Body>
             </Card>
-
-            <div className="text-center mt-3">
-              <span className="text-muted">Don't have an account? </span>
-              <Link to="/hospital/register" className="text-danger fw-semibold">
-                Register your hospital
-              </Link>
-            </div>
-
           </Col>
         </Row>
       </Container>

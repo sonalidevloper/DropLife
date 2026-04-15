@@ -1,92 +1,196 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './NotificationBell.css';
+import { Link } from 'react-router-dom';
+import { FaBell } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
+import api from '../services/api';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const NotificationBell = () => {
+  const { token } = useSelector((state) => state.auth);
 
-const DEMO = [
-  { id:1, title:'Emergency: O- needed',  body:'Patient in AIIMS requires O- urgently.',   time:'2 min ago',  read:false, type:'urgent'  },
-  { id:2, title:'Request approved',       body:'Your blood request REQ-001 was approved.', time:'15 min ago', read:false, type:'success' },
-  { id:3, title:'Donation camp nearby',   body:'Red Cross camp in your area on Dec 28.',   time:'1 hr ago',   read:true,  type:'info'    },
-  { id:4, title:'Stock alert: B-',        body:'B- stock critically low at Fortis.',        time:'3 hr ago',   read:true,  type:'warning' },
-];
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-export default function NotificationBell() {
-  const navigate  = useNavigate();
-  const [open,    setOpen]   = useState(false);
-  const [notifs,  setNotifs] = useState(DEMO);
-  const dropRef   = useRef(null);
-  const unread    = notifs.filter(n => !n.read).length;
+  const dropdownRef = useRef(null);
 
+  // 🔹 Fetch unread count
+ const fetchUnreadCount = async () => {
+  try {
+    const res = await api.get('/notifications/unread-count');
+    setUnreadCount(res.data.count || 0);
+  } catch (err) {
+    setUnreadCount(0);
+  }
+};
+
+  // 🔹 Fetch latest notifications
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/notifications?limit=5');
+      setNotifications(res.data.notifications || res.data || []);
+    } catch {
+      // silent fail
+    }
+  };
+
+// 🔹 Poll unread count every 30s
+useEffect(() => {
+  if (!token) return;
+
+  const fetchUnreadCountPoll = async () => {
+    try {
+      const res = await api.get('/notifications/unread-count');
+      setUnreadCount(res.data.count || 0);
+    } catch (err) {
+      
+      setUnreadCount(0);
+    }
+  };
+  const interval = setInterval(fetchUnreadCountPoll, 30000);
+
+  return () => clearInterval(interval);
+}, [token]);
+
+  // 🔹 Load notifications when dropdown opens
   useEffect(() => {
-    const load = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        // ── Tries /api/notification first (your route file), falls back to demo ──
-        const res = await axios.get(`${API_BASE}/notification`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data?.data?.length) setNotifs(res.data.data);
-      } catch { /* keep demo data */ }
+    if (!showDropdown) return;
+    fetchNotifications();
+  }, [showDropdown]);
+
+  // 🔹 Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
     };
-    load();
-    const iv = setInterval(load, 60000);
-    return () => clearInterval(iv);
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const h = e => { if (dropRef.current && !dropRef.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
+  // 🔹 Mark notification as read
+  const markRead = async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
 
-  const markAllRead = () => setNotifs(p => p.map(n => ({ ...n, read:true })));
-  const markRead    = id => setNotifs(p => p.map(n => n.id===id ? { ...n, read:true } : n));
-  const icon = t => ({ urgent:'⚡', success:'✅', warning:'⚠️', info:'🔔' }[t] || '🔔');
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n._id === id ? { ...n, isRead: true } : n
+        )
+      );
+
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch {
+      // silent fail
+    }
+  };
+
+  // 🔹 Time formatter
+  const timeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
+
+  // 🔴 If not logged in → hide bell
+  if (!token) return null;
 
   return (
-    <div className="notif-bell-wrap" ref={dropRef}>
-      <button className={`notif-bell-btn ${unread>0?'has-unread':''}`} onClick={() => setOpen(v=>!v)}>
-        🔔
-        {unread>0 && <span className="notif-count">{unread>9?'9+':unread}</span>}
+    <div className="position-relative" ref={dropdownRef} style={{ zIndex: 1050 }}>
+      
+      {/* 🔔 Bell Button */}
+      <button
+        className="btn btn-link text-dark p-1 position-relative border-0"
+        onClick={() => setShowDropdown((v) => !v)}
+        aria-label="Notifications"
+        style={{ fontSize: '1.2rem' }}
+      >
+        <FaBell />
+
+        {unreadCount > 0 && (
+          <span
+            className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+            style={{ fontSize: '0.6rem', minWidth: '16px' }}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </button>
 
-      {open && (
-        <div className="notif-dropdown">
-          <div className="notif-header">
-            <span className="notif-header-title">Notifications</span>
-            <div style={{ display:'flex', gap:8 }}>
-              {unread>0 && (
-                <button className="btn-ghost" style={{ fontSize:'11px',padding:'4px 8px' }} onClick={markAllRead}>
-                  Mark all read
-                </button>
-              )}
-              <button className="btn-ghost" style={{ fontSize:'11px',padding:'4px 8px' }}
-                onClick={() => { navigate('/notifications'); setOpen(false); }}>
-                View all
-              </button>
-            </div>
+      {/* 🔽 Dropdown */}
+      {showDropdown && (
+        <div
+          className="dropdown-menu show shadow"
+          style={{
+            right: 0,
+            left: 'auto',
+            minWidth: '320px',
+            maxWidth: '360px'
+          }}
+        >
+          
+          {/* Header */}
+          <div className="dropdown-header d-flex justify-content-between align-items-center">
+            <span className="fw-bold">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="badge bg-danger rounded-pill">
+                {unreadCount} unread
+              </span>
+            )}
           </div>
-          <div className="notif-list-dropdown">
-            {notifs.length===0
-              ? <div className="notif-empty"><span>🔕</span><p>No notifications</p></div>
-              : notifs.map(n => (
-                <button key={n.id} className={`notif-row ${!n.read?'unread':''}`}
-                  onClick={() => { markRead(n.id); navigate('/notifications'); setOpen(false); }}>
-                  <div className={`notif-row-icon ${n.type}`}>{icon(n.type)}</div>
-                  <div className="notif-row-body">
-                    <div className="notif-row-title">{n.title}</div>
-                    <div className="notif-row-text">{n.body}</div>
-                    <div className="notif-row-time">{n.time}</div>
-                  </div>
-                  {!n.read && <div className="notif-unread-dot"/>}
+
+          {/* Notification List */}
+          <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+            {notifications.length === 0 ? (
+              <div className="dropdown-item text-muted text-center py-3">
+                No notifications yet
+              </div>
+            ) : (
+              (Array.isArray(notifications) ? notifications : []).slice(0, 5).map((n) => (
+                <button
+                  key={n._id}
+                  className={`dropdown-item d-flex flex-column py-2 border-bottom ${
+                    !n.isRead ? 'bg-light' : ''
+                  }`}
+                  onClick={() => markRead(n._id)}
+                  style={{ whiteSpace: 'normal', textAlign: 'left' }}
+                >
+                  <span className="fw-semibold small">
+                    {n.title || 'Notification'}
+                  </span>
+
+                  <span className="text-muted small text-truncate">
+                    {n.message}
+                  </span>
+
+                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+                    {n.createdAt ? timeAgo(n.createdAt) : ''}
+                  </span>
                 </button>
-              ))}
+              ))
+            )}
           </div>
+
+          <div className="dropdown-divider m-0" />
+
+          {/* Footer */}
+          <Link
+            to="/notifications"
+            className="dropdown-item text-center text-danger fw-semibold small py-2"
+            onClick={() => setShowDropdown(false)}
+          >
+            View All Notifications
+          </Link>
         </div>
       )}
     </div>
   );
-}
+};
+
+
+export default NotificationBell;

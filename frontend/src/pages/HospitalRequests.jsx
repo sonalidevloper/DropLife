@@ -1,242 +1,178 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Container, Card, Badge, Button, Table, Form, Modal, Row, Col, InputGroup
+  Container, Card, Table, Badge, Button, Modal, Form
 } from 'react-bootstrap';
-import { useSelector } from 'react-redux';
-import { FaTint, FaPlus, FaSearch, FaUsers } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { FaHandHoldingMedical, FaEye, FaCheck } from 'react-icons/fa';
 import api from '../services/api';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const STATUSES = ['All', 'Open', 'In Progress', 'Fulfilled', 'Cancelled'];
+const DEMO_REQUESTS = [
+  {
+    _id: 'r1', patientName: 'Ramesh Kumar', bloodGroup: 'O+', unitsRequired: 3,
+    urgency: 'Critical', status: 'Open',
+    hospital: { name: 'AIIMS Delhi', address: 'Ansari Nagar, New Delhi' },
+    requesterName: 'Suresh Kumar', requesterPhone: '9876543210',
+    needByDate: new Date('2024-03-05'), createdAt: new Date('2024-03-03')
+  },
+  {
+    _id: 'r2', patientName: 'Priya Sharma', bloodGroup: 'A+', unitsRequired: 2,
+    urgency: 'Urgent', status: 'In Progress',
+    hospital: { name: 'Apollo Hospital', address: 'Jubilee Hills, Hyderabad' },
+    requesterName: 'Anand Sharma', requesterPhone: '8765432109',
+    needByDate: new Date('2024-03-06'), createdAt: new Date('2024-03-04')
+  },
+  {
+    _id: 'r3', patientName: 'Mohan Das', bloodGroup: 'B-', unitsRequired: 1,
+    urgency: 'Normal', status: 'Fulfilled',
+    hospital: { name: 'KIMS Hospital', address: 'KIIT Road, Bhubaneswar' },
+    requesterName: 'Gita Das', requesterPhone: '7654321098',
+    needByDate: new Date('2024-03-07'), createdAt: new Date('2024-03-05')
+  }
+];
 
-const statusColor = (s) => ({
-  Open: 'primary',
-  'In Progress': 'info',
-  Fulfilled: 'success',
-  Cancelled: 'secondary'
-}[s] || 'secondary');
+const URGENCY_VARIANT = { Critical: 'danger', Urgent: 'warning', Normal: 'secondary' };
+const STATUS_VARIANT  = { Open: 'primary', 'In Progress': 'warning', Fulfilled: 'success', Cancelled: 'danger' };
 
 const HospitalRequests = () => {
-  const { user } = useSelector((state) => state.auth);
-  const hospitalId = user?.hospitalId || user?._id;
-
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('All');
-  const [search, setSearch] = useState('');
-
   const [showModal, setShowModal] = useState(false);
-  const [showDonorsModal, setShowDonorsModal] = useState(false);
+  const [viewRequest, setViewRequest] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [donors, setDonors] = useState([]);
-
-  const [submitting, setSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    bloodGroup: 'A+',
-    units: '',
-    urgency: 'Normal',
-    notes: '',
-    patientName: ''
-  });
-
-  // 🔹 Fetch requests
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
-      const res = await api.get(`/hospitals/${hospitalId}/requests`);
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.requests || [];
-
-      setRequests(data);
+      const params = {};
+      if (statusFilter) params.status = statusFilter;
+      const res = await api.get('/blood-request', { params });
+      const data = res.data.data || [];
+      setRequests(data.length ? data : DEMO_REQUESTS);
     } catch {
-      setRequests([]);
-      toast.error('Failed to load requests');
+      setRequests(DEMO_REQUESTS);
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
-  useEffect(() => {
-    if (hospitalId) fetchRequests();
-  }, [hospitalId]);
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
-  // 🔹 Optimized filtering (useMemo)
-  const filtered = useMemo(() => {
-    let data = [...requests];
-
-    if (activeTab !== 'All') {
-      data = data.filter(r => r.status === activeTab);
-    }
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      data = data.filter(r =>
-        `${r.bloodGroup} ${r.patientName}`
-          .toLowerCase()
-          .includes(q)
-      );
-    }
-
-    return data;
-  }, [requests, activeTab, search]);
-
-  // 🔹 Create request
-  const submitRequest = async () => {
-    if (!form.units || isNaN(form.units)) {
-      toast.error('Enter valid units');
-      return;
-    }
-
-    setSubmitting(true);
-
+  const handleFulfill = async (id) => {
     try {
-      await api.post(`/hospitals/${hospitalId}/blood-request`, form);
-
-      toast.success('Request created');
-      setShowModal(false);
-
-      setForm({
-        bloodGroup: 'A+',
-        units: '',
-        urgency: 'Normal',
-        notes: '',
-        patientName: ''
-      });
-
+      await api.put(`/blood-request/${id}/status`, { status: 'Fulfilled' });
+      toast.success('Request marked as fulfilled');
       fetchRequests();
-    } catch {
-      toast.error('Failed to create request');
-    } finally {
-      setSubmitting(false);
-    }
+    } catch { toast.error('Failed to update request'); }
   };
 
-  // 🔹 View donors
-  const viewDonors = async (request) => {
-    setSelectedRequest(request);
-    setDonors([]);
-    setShowDonorsModal(true);
+  const filtered = requests; // filter already applied via API param
 
-    try {
-      const res = await api.get(`/blood-request/${request._id}/donors`);
-      setDonors(res.data?.donors || res.data || []);
-    } catch {
-      toast.error('Failed to fetch donors');
-      setDonors([]);
-    }
-  };
+  if (loading) return <LoadingSpinner />;
 
   return (
-    <Container className="py-4">
+    <Container className="py-5">
+      <h2 className="fw-bold mb-4">
+        <FaHandHoldingMedical className="me-2 text-danger" />Blood Requests
+      </h2>
 
-      {/* HEADER */}
-      <div className="d-flex justify-content-between mb-4">
-        <h2><FaTint className="text-danger" /> Blood Requests</h2>
-
-        <Button onClick={() => setShowModal(true)}>
-          <FaPlus /> New
-        </Button>
-      </div>
-
-      {/* FILTER TABS */}
-      <div className="mb-3">
-        {STATUSES.map(s => (
-          <Button
-            key={s}
-            size="sm"
-            variant={activeTab === s ? 'danger' : 'outline-secondary'}
-            onClick={() => setActiveTab(s)}
-            className="me-2"
-          >
-            {s}
-          </Button>
+      {/* Summary */}
+      <div className="d-flex gap-3 mb-4 flex-wrap">
+        {Object.keys(STATUS_VARIANT).map((s) => (
+          <Card key={s} className="border-0 shadow-sm text-center px-3 py-2" style={{ minWidth: 110 }}>
+            <Badge bg={STATUS_VARIANT[s]} className="mb-1">{s}</Badge>
+            <div className="fw-bold">{requests.filter(r => r.status === s).length}</div>
+          </Card>
         ))}
       </div>
 
-      {/* SEARCH */}
-      <InputGroup className="mb-3">
-        <InputGroup.Text><FaSearch /></InputGroup.Text>
-        <Form.Control
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </InputGroup>
-
-      {/* TABLE */}
-      <Card>
-        <Card.Body className="p-0">
-          {loading ? (
-            <div className="text-center py-4">Loading...</div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-4">No data</div>
-          ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <th>Blood</th>
-                  <th>Units</th>
-                  <th>Patient</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filtered.map(r => (
-                  <tr key={r._id}>
-                    <td><Badge bg="danger">{r.bloodGroup}</Badge></td>
-                    <td>{r.units}</td>
-                    <td>{r.patientName}</td>
-                    <td><Badge bg={statusColor(r.status)}>{r.status}</Badge></td>
-                    <td>
-                      <Button size="sm" onClick={() => viewDonors(r)}>
-                        <FaUsers /> Donors
+      <Card className="shadow">
+        <Card.Header className="bg-danger text-white d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">All Blood Requests</h5>
+          <Form.Select
+            size="sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ width: 'auto' }}
+          >
+            <option value="">All Statuses</option>
+            {Object.keys(STATUS_VARIANT).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </Form.Select>
+        </Card.Header>
+        <Card.Body>
+          <Table responsive hover>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Blood</th>
+                <th>Units</th>
+                <th>Hospital</th>
+                <th>Urgency</th>
+                <th>Status</th>
+                <th>Need By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((req) => (
+                <tr key={req._id}>
+                  <td className="fw-bold">{req.patientName}</td>
+                  <td><Badge bg="danger">{req.bloodGroup}</Badge></td>
+                  <td>{req.unitsRequired}</td>
+                  <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {req.hospital?.name}
+                  </td>
+                  <td><Badge bg={URGENCY_VARIANT[req.urgency]}>{req.urgency}</Badge></td>
+                  <td><Badge bg={STATUS_VARIANT[req.status]}>{req.status}</Badge></td>
+                  <td>{req.needByDate ? new Date(req.needByDate).toLocaleDateString() : '—'}</td>
+                  <td>
+                    <Button size="sm" variant="outline-info" className="me-1"
+                      onClick={() => { setViewRequest(req); setShowModal(true); }}>
+                      <FaEye />
+                    </Button>
+                    {req.status === 'In Progress' && (
+                      <Button size="sm" variant="success" onClick={() => handleFulfill(req._id)}>
+                        <FaCheck />
                       </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         </Card.Body>
       </Card>
 
-      {/* CREATE MODAL */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* Detail modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Request Details</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-          <Form.Control
-            placeholder="Patient Name"
-            value={form.patientName}
-            onChange={(e) =>
-              setForm({ ...form, patientName: e.target.value })
-            }
-          />
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button onClick={submitRequest} disabled={submitting}>
-            {submitting ? 'Saving...' : 'Submit'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* DONORS MODAL */}
-      <Modal show={showDonorsModal} onHide={() => setShowDonorsModal(false)}>
-        <Modal.Body>
-          {donors.length === 0 ? (
-            <div>No donors</div>
-          ) : (
-            donors.map(d => (
-              <div key={d._id}>{d.name}</div>
-            ))
+          {viewRequest && (
+            <div>
+              <p><strong>Patient:</strong> {viewRequest.patientName}</p>
+              <p><strong>Blood Group:</strong> <Badge bg="danger">{viewRequest.bloodGroup}</Badge></p>
+              <p><strong>Units Required:</strong> {viewRequest.unitsRequired}</p>
+              <p><strong>Urgency:</strong> <Badge bg={URGENCY_VARIANT[viewRequest.urgency]}>{viewRequest.urgency}</Badge></p>
+              <p><strong>Hospital:</strong> {viewRequest.hospital?.name}</p>
+              <p><strong>Address:</strong> {viewRequest.hospital?.address}</p>
+              <p><strong>Requester:</strong> {viewRequest.requesterName} — {viewRequest.requesterPhone}</p>
+              <p><strong>Need By:</strong> {viewRequest.needByDate ? new Date(viewRequest.needByDate).toLocaleDateString() : '—'}</p>
+              <p><strong>Status:</strong> <Badge bg={STATUS_VARIANT[viewRequest.status]}>{viewRequest.status}</Badge></p>
+            </div>
           )}
         </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
+          {viewRequest?.status === 'In Progress' && (
+            <Button variant="success" onClick={() => { handleFulfill(viewRequest._id); setShowModal(false); }}>
+              Mark Fulfilled
+            </Button>
+          )}
+        </Modal.Footer>
       </Modal>
-
     </Container>
   );
 };

@@ -163,8 +163,7 @@ const CITIES = ["All Cities", "Bhubaneswar", "Cuttack"];
 const TYPES = ["All Types", "Government", "Private"];
 
 export default function HospitalsPublic() {
-  const [hospitals, setHospitals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hospitals, setHospitals] = useState([]);   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("All Cities");
   const [selectedType, setSelectedType] = useState("All Types");
@@ -179,10 +178,14 @@ export default function HospitalsPublic() {
     const fetchHospitals = async () => {
       try {
         const { data } = await axios.get(
-          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/hospitals/public`
-        );
-        setHospitals(Array.isArray(data) ? data : data.data || MOCK_HOSPITALS);
-      } catch {
+          `${process.env.REACT_APP_API_URL || "http://localhost:5003/api"}/hospitals`);
+        setHospitals(
+  Array.isArray(data)
+    ? data
+    : (data?.data && data.data.length > 0)
+      ? data.data
+      : MOCK_HOSPITALS
+);
         setHospitals(MOCK_HOSPITALS);
       } finally {
         setLoading(false);
@@ -471,7 +474,7 @@ export default function HospitalsPublic() {
       {/* Quick Stats */}
       <div style={s.statsBar}>
         {[
-          ["Total Hospitals", hospitals.length],
+          ["Total Hospitals", (hospitals || []).length],
           ["With 24/7 Service", hospitals.filter((h) => h.operatingHours === "24/7").length],
           ["Verified", hospitals.filter((h) => h.verified).length],
           ["Emergency Ready", hospitals.filter((h) => h.emergency).length],

@@ -86,7 +86,7 @@ export default function HospitalDashboard() {
       try {
         const token = localStorage.getItem("token");
         const { data: res } = await axios.get(
-          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/hospital/dashboard`,
+          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/hospital/dashboard`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setData({ ...MOCK_DATA, ...res });

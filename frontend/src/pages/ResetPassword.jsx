@@ -1,160 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  Container, Row, Col, Card, Form, Button, Alert, Spinner
-} from 'react-bootstrap';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaTint } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { FaTint, FaLock } from 'react-icons/fa';
 import api from '../services/api';
-
-const schema = Yup.object({
-  password: Yup.string()
-    .min(6, 'Minimum 6 characters')
-    .required('Required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password')], 'Passwords do not match')
-    .required('Required'),
-});
+import './Auth.css';
 
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const [validToken, setValidToken] = useState(true);
-  const [checking, setChecking] = useState(true);
-
-  // 🔥 Validate token first
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        await api.get(`/auth/validate-reset-token/${token}`);
-      } catch {
-        setValidToken(false);
-      } finally {
-        setChecking(false);
-      }
-    };
-
-    if (token) checkToken();
-    else setValidToken(false);
-  }, [token]);
-
-  // 🔥 Submit
-  const handleSubmit = async (values, { setSubmitting, setStatus }) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
     try {
-      await api.put(`/auth/reset-password/${token}`, {
-        password: values.password,
-      });
-
-      toast.success('Password reset successful');
+      await api.post(`/auth/reset-password/${token}`, { password });
+      toast.success('Password reset successful! Please login.');
       navigate('/login');
-
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        'Reset failed. Link expired.';
-
-      setStatus(msg);
-      toast.error(msg);
+      toast.error(err.response?.data?.message || 'Reset failed. Link may be expired.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  // 🔥 Loading state
-  if (checking) {
-    return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" />
-      </Container>
-    );
-  }
-
-  // 🔴 Invalid token
-  if (!validToken) {
-    return (
-      <Container className="py-5 text-center">
-        <Alert variant="danger">
-          Invalid or expired link.
-          <br />
-          <Link to="/forgot-password">Request again</Link>
-        </Alert>
-      </Container>
-    );
-  }
-
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center"
-      style={{
-        background: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)'
-      }}
-    >
+    <div className="auth-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col md={6}>
+        <Row className="justify-content-center align-items-center min-vh-100">
+          <Col md={5}>
+            <Card className="auth-card shadow-lg">
+              <Card.Body className="p-5">
+                <div className="text-center mb-4">
+                  <FaTint size={55} className="text-danger mb-3" />
+                  <h2 className="fw-bold">Reset Password</h2>
+                  <p className="text-muted">Enter your new password</p>
+                </div>
 
-            <Card className="shadow">
-              <Card.Body>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>New Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Enter new password"
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </Form.Group>
 
-                <h3 className="text-center mb-4">
-                  <FaTint /> Reset Password
-                </h3>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Confirm new password"
+                      autoComplete="new-password"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      required
+                    />
+                  </Form.Group>
 
-                <Formik
-                  initialValues={{ password: '', confirmPassword: '' }}
-                  validationSchema={schema}
-                  onSubmit={handleSubmit}
-                >
-                  {({
-                    values,
-                    errors,
-                    touched,
-                    handleChange,
-                    handleSubmit,
-                    isSubmitting,
-                    status
-                  }) => (
-                    <Form onSubmit={handleSubmit}>
-
-                      {status && <Alert>{status}</Alert>}
-
-                      <Form.Control
-                        type="password"
-                        name="password"
-                        placeholder="New Password"
-                        value={values.password}
-                        onChange={handleChange}
-                        isInvalid={touched.password && !!errors.password}
-                      />
-
-                      <Form.Control
-                        type="password"
-                        name="confirmPassword"
-                        placeholder="Confirm Password"
-                        value={values.confirmPassword}
-                        onChange={handleChange}
-                        isInvalid={touched.confirmPassword && !!errors.confirmPassword}
-                        className="mt-3"
-                      />
-
-                      <Button
-                        type="submit"
-                        className="w-100 mt-3"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Resetting...' : 'Reset Password'}
-                      </Button>
-
-                    </Form>
-                  )}
-                </Formik>
-
+                  <Button
+                    type="submit"
+                    variant="danger"
+                    className="w-100"
+                    disabled={loading}
+                  >
+                    {loading ? 'Resetting…' : 'Reset Password'}
+                  </Button>
+                </Form>
               </Card.Body>
             </Card>
-
           </Col>
         </Row>
       </Container>

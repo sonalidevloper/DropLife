@@ -1,40 +1,47 @@
-import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
-/**
- * ProtectedRoute — wraps pages that require authentication.
- *
- * Props:
- *  - role: "admin" | "donor" | "hospital" | "user"  → enforce specific role
- *  - hospitalOnly: boolean → shorthand for role="hospital"
- *  - children: React node
- */
-export default function ProtectedRoute({ children, role, hospitalOnly }) {
+const ProtectedRoute = ({ children, role }) => {
+  const navigate = useNavigate();
   const { user, token } = useSelector((state) => state.auth);
-  const location = useLocation();
 
-  // Not logged in → send to login
+  useEffect(() => {
+    // If no token, redirect to login
+    if (!token) {
+      toast.warning('Please login to access this page');
+    }
+    
+    // If role doesn't match, show error
+    if (token && role && user?.role !== role) {
+      toast.error('Access denied. Insufficient permissions.');
+    }
+  }, [token, role, user]);
+
+  // Check if user is authenticated
   if (!token || !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Hospital-only pages
-  if (hospitalOnly && user.role !== "hospital" && user.role !== "admin") {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Role-specific pages
-  if (role && user.role !== role && user.role !== "admin") {
-    // Redirect to the user's correct dashboard instead of 403
-    const dashboardMap = {
-      donor: "/donor/dashboard",
-      hospital: "/hospital/dashboard",
-      user: "/user/dashboard",
-      admin: "/admin/dashboard",
-    };
-    return <Navigate to={dashboardMap[user.role] || "/"} replace />;
+  // Check if user has the required role
+  if (role && user.role !== role) {
+    // Redirect based on user's actual role
+    switch(user.role) {
+      case 'admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      case 'donor':
+        return <Navigate to="/donor/dashboard" replace />;
+      case 'hospital':
+        return <Navigate to="/hospital/dashboard" replace />;
+      case 'user':
+        return <Navigate to="/user/dashboard" replace />;
+      default:
+        return <Navigate to="/home" replace />;
+    }
   }
 
   return children;
-}
+};
+
+export default ProtectedRoute;

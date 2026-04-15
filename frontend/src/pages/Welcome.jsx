@@ -27,7 +27,7 @@ const Welcome = () => {
       <Container className="welcome-container">
         <div className="welcome-content">
           <SplitTextAnimation 
-            text="Welcome to DR🩸PLIFE" 
+            text="Welcome to DROPLIFE" 
             className="welcome-title"
           />
           <div className="welcome-subtitle fade-in">

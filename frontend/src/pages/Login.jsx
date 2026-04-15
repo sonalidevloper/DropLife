@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, reset } from '../redux/authSlice';
+import { login, adminLogin, reset } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import { FaTint } from 'react-icons/fa';
 import './Auth.css';
@@ -24,7 +24,11 @@ const Login = () => {
       password: Yup.string().required('Password is required'),
     }),
     onSubmit: (values) => {
-      dispatch(login(values));
+      if (values.email === 'admin@droplife.com') {
+  dispatch(adminLogin(values));
+} else {
+  dispatch(login(values));
+}
     },
   });
 
@@ -90,6 +94,11 @@ const Login = () => {
                       {formik.errors.password}
                     </Form.Control.Feedback>
                   </Form.Group>
+                  <div className="text-end mb-3">
+                  <Link to="/forgot-password" className="text-danger fw-bold">
+                   Forgot Password?
+                   </Link>
+                  </div>
 
                   <Button
                     type="submit"
