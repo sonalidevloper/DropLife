@@ -1,45 +1,46 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import HttpBackend from 'i18next-http-backend';
-import App from './App';
-import './index.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css';
+// i18n import REMOVED — causes compile errors when i18n package not properly set up
 
-// Initialize i18next
-i18n
-  .use(HttpBackend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    fallbackLng: 'en',
-    supportedLngs: [
-      'en','hi','or','bn','te','mr','ta','gu','kn','ml',
-      'pa','as','ur','mai','ne','si','ar','zh','fr','de',
-      'es','pt','ru','ja','ko','tr','it','vi','id','ms',
-      'th','sw','fa','pl','nl','sv','sat','ks'
-    ],
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-      lookupLocalStorage: 'droplife_lang',
-    },
-    backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
-    },
-    interpolation: { escapeValue: false },
-    react: { useSuspense: false },
-  });
+// Suppress browser extension console noise
+const _origLog = console.log;
+console.log = function (...args) {
+  const msg = args.join(' ');
+  if (
+    msg.includes('enable copy') ||
+    msg.includes('E.C.P') ||
+    msg.includes('ecp_regular') ||
+    msg.includes('Download the React DevTools')
+  ) return;
+  _origLog.apply(console, args);
+};
+
+const _origWarn = console.warn;
+console.warn = function (...args) {
+  const msg = args.join(' ');
+  if (msg.includes('React Router Future Flag')) return;
+  _origWarn.apply(console, args);
+};
+
+if (process.env.NODE_ENV === 'development') {
+  _origLog('%c🩸 DROPLIFE - Smart Blood Donation System', 'color:#dc3545;font-size:20px;font-weight:bold');
+  _origLog('%cConnecting Lives, One Drop at a Time', 'color:#667eea;font-size:13px;font-style:italic');
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
-// NOTE: StrictMode intentionally removed — it causes Leaflet map
-// to double-initialize and crash with "Map container already initialized".
 root.render(
-  <Provider store={store}>
-    <App />
-  </Provider>
+  <React.StrictMode>
+    <Provider store={store}>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </Provider>
+  </React.StrictMode>
 );

@@ -13,13 +13,30 @@ const initialState = {
   isSuccess: false,
   message: '',
 };
-
-// Register user
+//Register
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, thunkAPI) => {
     try {
       const response = await api.post('/auth/register', userData);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Register user
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (userData, thunkAPI) => {
+    try {
+      const response = await api.post('/auth/register-user', userData);
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -87,20 +104,34 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(register.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.message = action.payload;
-      })
+    .addCase(register.pending, (state) => {
+  state.isLoading = true;
+})
+.addCase(register.fulfilled, (state, action) => {
+  state.isLoading = false;
+  state.isSuccess = true;
+  state.user = action.payload.user;
+  state.token = action.payload.token;
+})
+.addCase(register.rejected, (state, action) => {
+  state.isLoading = false;
+  state.isError = true;
+  state.message = action.payload;
+})
+     .addCase(registerUser.pending, (state) => {
+  state.isLoading = true;
+})
+.addCase(registerUser.fulfilled, (state, action) => {
+  state.isLoading = false;
+  state.isSuccess = true;
+  state.user = action.payload.user;
+  state.token = action.payload.token;
+})
+.addCase(registerUser.rejected, (state, action) => {
+  state.isLoading = false;
+  state.isError = true;
+  state.message = action.payload;
+})
       .addCase(login.pending, (state) => {
         state.isLoading = true;
       })
