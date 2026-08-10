@@ -481,7 +481,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 👨‍💻 Author
 
-Your Name - [GitHub](https://github.com/yourusername)
+Sonali Jena - [GitHub](https://github.com/sonalidevloper)
 
 ## 🙏 Acknowledgments
 
