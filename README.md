@@ -14,7 +14,6 @@ A comprehensive MERN stack application connecting blood donors, recipients, hosp
 - [API Documentation](#api-documentation)
 - [Screenshots](#screenshots)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## ✨ Features
 
