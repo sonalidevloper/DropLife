@@ -1,4 +1,4 @@
-# 🩸 DROPLIFE - Smart Blood Donation System
+# 🩸DROPLIFE - Smart Blood Donation System
 
 A comprehensive MERN stack application connecting blood donors, recipients, hospitals, and healthcare facilities in real-time with 62 API routes, interactive maps, analytics dashboards, voice assistant, and multi-language support.
 
